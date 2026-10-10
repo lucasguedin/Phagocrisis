@@ -1,14 +1,16 @@
 [gd_scene format=4 uid="uid://blugytqu80ldq"]
 
-[ext_resource type="Script" uid="uid://dwdygla3g4lko" path="res://src/Player.cs" id="1_7elqm"]
+[ext_resource type="Script" uid="uid://dosvvbh2d1rfg" path="res://src/Player.gd" id="1_3qlfd"]
 [ext_resource type="Texture2D" uid="uid://dts0u5akkoorx" path="res://sprites/prota.png" id="2_vob2u"]
 [ext_resource type="Texture2D" uid="uid://cinwgtelpr5he" path="res://sprites/fundo01.png" id="3_snm3m"]
 [ext_resource type="Texture2D" uid="uid://cfheuh8oe2joh" path="res://sprites/fundo02.png" id="4_3qlfd"]
-[ext_resource type="Script" uid="uid://b14buyl3hdlft" path="res://src/Enemy2.cs" id="5_hwcy0"]
+[ext_resource type="Script" uid="uid://bjkvug1xv78j0" path="res://src/Enemy2.gd" id="5_3qlfd"]
 [ext_resource type="Texture2D" uid="uid://bq6amjk846s5q" path="res://sprites/inimigoVermei.png" id="6_vob2u"]
-[ext_resource type="Script" uid="uid://cpxlchmvj66ep" path="res://src/Enemy3.cs" id="7_dd1j4"]
-[ext_resource type="Script" uid="uid://xhksqrvpe1ru" path="res://src/Enemy1.cs" id="8_tdupg"]
+[ext_resource type="Script" uid="uid://dbecwci1vewox" path="res://src/Enemy3.gd" id="7_3qlfd"]
+[ext_resource type="Script" uid="uid://b082rvowleyqg" path="res://src/Enemy1.gd" id="8_w4a5i"]
 [ext_resource type="Texture2D" uid="uid://lamwie8rr2u1" path="res://sprites/portalDungeon.png" id="9_vob2u"]
+[ext_resource type="Texture2D" uid="uid://btf6myy7qrjtx" path="res://sprites/fann.png" id="10_3qlfd"]
+[ext_resource type="Texture2D" uid="uid://bn3ylue2oo6s2" path="res://sprites/drag.png" id="11_w4a5i"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8w0r3"]
 size = Vector2(32, 31.5)
@@ -41,7 +43,7 @@ size = Vector2(32, 33)
 [node name="Cena2D" type="Node2D" unique_id=236744926]
 
 [node name="Player" type="CharacterBody2D" parent="." unique_id=2078131585]
-script = ExtResource("1_7elqm")
+script = ExtResource("1_3qlfd")
 
 [node name="Player" type="Sprite2D" parent="Player" unique_id=685005020]
 position = Vector2(407, 359)
@@ -61,66 +63,54 @@ tile_map_data = PackedByteArray("AAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAACAAAAAAAAAAA
 tile_set = SubResource("TileSet_h4t55")
 
 [node name="Enemy2" type="CharacterBody2D" parent="." unique_id=671340279]
-script = ExtResource("5_hwcy0")
+script = ExtResource("5_3qlfd")
 
 [node name="Fann" type="Sprite2D" parent="Enemy2" unique_id=785834732]
-position = Vector2(940, 257)
+position = Vector2(1027, 157)
 texture = ExtResource("6_vob2u")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Enemy2" unique_id=1829032048]
-position = Vector2(939, 257)
+position = Vector2(1028, 159)
 shape = SubResource("RectangleShape2D_h4t55")
 
 [node name="Enemy3" type="CharacterBody2D" parent="." unique_id=742259325]
-script = ExtResource("7_dd1j4")
+script = ExtResource("7_3qlfd")
 
 [node name="Fann" type="Sprite2D" parent="Enemy3" unique_id=1721436051]
-position = Vector2(250, 261)
+position = Vector2(263, 223)
 texture = ExtResource("6_vob2u")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Enemy3" unique_id=1245540790]
-position = Vector2(250, 261)
+position = Vector2(264, 226)
 shape = SubResource("RectangleShape2D_h4t55")
 
 [node name="Enemy1" type="CharacterBody2D" parent="." unique_id=2049614281]
-script = ExtResource("8_tdupg")
+script = ExtResource("8_w4a5i")
 
 [node name="Fann" type="Sprite2D" parent="Enemy1" unique_id=1438279004]
-position = Vector2(755, 502)
+position = Vector2(707, 436)
 texture = ExtResource("6_vob2u")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Enemy1" unique_id=354069013]
-position = Vector2(755, 502)
+position = Vector2(707, 439)
 shape = SubResource("RectangleShape2D_h4t55")
 
 [node name="PortalDungeon" type="Sprite2D" parent="." unique_id=1120925743]
 position = Vector2(1222, 665)
 texture = ExtResource("9_vob2u")
 
-[node name="Node2D" type="Node2D" parent="." unique_id=1196930415]
+[node name="Fann" type="Sprite2D" parent="." unique_id=1731235365]
+position = Vector2(649, 82)
+texture = ExtResource("10_3qlfd")
 
-[node name="Control" type="Control" parent="Node2D" unique_id=2095256758]
-custom_minimum_size = Vector2(300, 400)
-custom_maximum_size = Vector2(300, 400)
-layout_mode = 3
-anchors_preset = 0
-offset_left = 927.0
-offset_top = 164.0
-offset_right = 1227.0
-offset_bottom = 564.0
-tooltip_text = "TIRIRI"
+[node name="Fann2" type="Sprite2D" parent="." unique_id=769471009]
+position = Vector2(1242, 477)
+texture = ExtResource("10_3qlfd")
 
-[node name="RichTextLabel" type="RichTextLabel" parent="Node2D/Control" unique_id=1291039437]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.42600003
-anchor_top = 0.5
-anchor_right = 0.57000005
-anchor_bottom = 0.64000005
-offset_left = -196.518
-offset_top = -312.5
-offset_right = 165.48993
-offset_bottom = -147.40002
-text = "estamos NA BARRIGA DE UM CRAKUDO 
-HIHIHIHIHIHIHIHIHI"
-horizontal_alignment = 1
+[node name="Drag" type="Sprite2D" parent="." unique_id=541105931]
+position = Vector2(74, 652)
+texture = ExtResource("11_w4a5i")
+
+[node name="Drag2" type="Sprite2D" parent="." unique_id=2046776657]
+position = Vector2(854, 78)
+texture = ExtResource("11_w4a5i")
