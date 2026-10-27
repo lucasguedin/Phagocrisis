@@ -43,6 +43,12 @@ custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
 text = "Continuar"
 
+[node name="OptionsButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=1291138946]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+text = "Opções"
+
 [node name="ExitButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=1769525891]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 50)
