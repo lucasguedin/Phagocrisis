@@ -1,0 +1,61 @@
+[gd_scene format=3 uid="uid://bxpu83qo5c2fj"]
+
+[ext_resource type="Texture2D" uid="uid://bp4adqliyrfvc" path="res://sprites/logo_utfpr.png" id="1_l6cm7"]
+
+[node name="MainMenu" type="Control" unique_id=330832889]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=866471752]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer" unique_id=162780318]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/VBoxContainer" unique_id=78416365]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.91, 0, 0.015166435, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 96
+text = "Phagocrisis"
+horizontal_alignment = 1
+
+[node name="PlayButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=1998878814]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+text = "Jogar"
+
+[node name="ContinueButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=905866582]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+text = "Continuar"
+
+[node name="ExitButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=1769525891]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+text = "Sair"
+
+[node name="LogoUTFPR" type="TextureRect" parent="." unique_id=455891843]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 1
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 120.0
+offset_bottom = 120.0
+texture = ExtResource("1_l6cm7")
+expand_mode = 1
+stretch_mode = 5
