@@ -11,9 +11,13 @@ config_version=5
 [application]
 
 config/name="lab-game-marcao"
-run/main_scene="uid://blugytqu80ldq"
+run/main_scene="uid://bxpu83qo5c2fj"
 config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
 config/icon="res://sprites/icon.svg"
+
+[autoload]
+
+GameState="*uid://bglnrcxr3lu2w"
 
 [display]
 

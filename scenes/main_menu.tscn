@@ -1,6 +1,9 @@
 [gd_scene format=3 uid="uid://bxpu83qo5c2fj"]
 
+[ext_resource type="Script" uid="uid://bttdxpakultoy" path="res://src/pause_menu.gd" id="1_bqqt6"]
+[ext_resource type="Script" uid="uid://dyu0wxoxkt214" path="res://src/menu/play_button.gd" id="1_ekxnf"]
 [ext_resource type="Texture2D" uid="uid://bp4adqliyrfvc" path="res://sprites/logo_utfpr.png" id="1_l6cm7"]
+[ext_resource type="Script" uid="uid://hy31p7fqf4pa" path="res://src/menu/exit_button.gd" id="3_wu84c"]
 
 [node name="MainMenu" type="Control" unique_id=330832889]
 layout_mode = 3
@@ -9,6 +12,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_bqqt6")
 
 [node name="CenterContainer" type="CenterContainer" parent="." unique_id=866471752]
 layout_mode = 1
@@ -36,6 +40,8 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
 text = "Jogar"
+script = ExtResource("1_ekxnf")
+game_scene_path = "uid://blugytqu80ldq"
 
 [node name="ContinueButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=905866582]
 unique_name_in_owner = true
@@ -54,6 +60,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
 text = "Sair"
+script = ExtResource("3_wu84c")
 
 [node name="LogoUTFPR" type="TextureRect" parent="." unique_id=455891843]
 custom_minimum_size = Vector2(100, 100)

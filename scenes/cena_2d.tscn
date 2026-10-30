@@ -1,6 +1,7 @@
 [gd_scene format=4 uid="uid://blugytqu80ldq"]
 
 [ext_resource type="Script" uid="uid://dosvvbh2d1rfg" path="res://src/Player.gd" id="1_3qlfd"]
+[ext_resource type="PackedScene" uid="uid://bxpu83qo5c2fj" path="res://scenes/main_menu.tscn" id="2_lvmly"]
 [ext_resource type="Texture2D" uid="uid://dts0u5akkoorx" path="res://sprites/prota.png" id="2_vob2u"]
 [ext_resource type="Texture2D" uid="uid://cinwgtelpr5he" path="res://sprites/fundo01.png" id="3_snm3m"]
 [ext_resource type="Texture2D" uid="uid://cfheuh8oe2joh" path="res://sprites/fundo02.png" id="4_3qlfd"]
@@ -44,6 +45,7 @@ size = Vector2(32, 33)
 
 [node name="Player" type="CharacterBody2D" parent="." unique_id=2078131585]
 script = ExtResource("1_3qlfd")
+pause_menu_scene = ExtResource("2_lvmly")
 
 [node name="Player" type="Sprite2D" parent="Player" unique_id=685005020]
 position = Vector2(407, 359)

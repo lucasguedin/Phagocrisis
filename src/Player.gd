@@ -4,6 +4,9 @@ extends CharacterBody2D
 @export var speed: float = 250.0
 @export var dash_distance: float = 64.0
 @export var game_size: Vector2 = Vector2(1280.0, 720.0)
+@export var pause_menu_scene: PackedScene
+
+
 
 @onready var sprite: Sprite2D = $Player
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -14,8 +17,22 @@ var ultima_direcao: Vector2 = Vector2.RIGHT
 # Evita executar o dash repetidamente enquanto E estiver pressionada.
 var dash_pendente: bool = false
 
+func _ready() -> void:
+	add_to_group("player")
 
 func _input(event: InputEvent) -> void:
+
+	# Tecla P abre o menu de pausa.
+	if (
+		event is InputEventKey
+		and event.pressed
+		and not event.echo
+		and event.keycode == KEY_P
+	):
+		abrir_menu_pausa()
+		return
+
+	# Tecla E executa o dash.
 	if (
 		event is InputEventKey
 		and event.pressed
@@ -24,6 +41,28 @@ func _input(event: InputEvent) -> void:
 	):
 		dash_pendente = true
 
+func abrir_menu_pausa() -> void:
+	if pause_menu_scene == null:
+		push_error("A cena do menu de pausa não foi configurada!")
+		return
+
+	# Cria uma camada acima do jogo.
+	var overlay_layer := CanvasLayer.new()
+	overlay_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	overlay_layer.layer = 10
+
+	get_tree().current_scene.add_child(overlay_layer)
+	# Instancia o menu.
+	var menu := pause_menu_scene.instantiate() as Control
+	menu.process_mode = Node.PROCESS_MODE_ALWAYS
+
+	overlay_layer.add_child(menu)
+
+	# Faz o menu ocupar a tela inteira.
+	menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	# Pausa o jogo.
+	get_tree().paused = true
 
 func _physics_process(_delta: float) -> void:
 	var direction: Vector2 = Vector2.ZERO
