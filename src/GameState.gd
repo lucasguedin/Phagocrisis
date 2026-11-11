@@ -41,7 +41,6 @@ func check_room_victory(tree: SceneTree) -> void:
 
 func add_score(points: int) -> void:
 	score += points
-	player_level = 1 + int(float(score) / 600.0)
 	stats_updated.emit()
 
 func save_current_game() -> void:

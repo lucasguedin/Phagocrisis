@@ -144,15 +144,15 @@ func _setup_frugal_hud() -> void:
 	hud_atp_label.text = "30/30"
 	root.add_child(hud_atp_label)
 
-	# Labels LV e SCORE
+	# Labels de Nível da Fase (estático na fase) e SCORE
 	hud_lv_label = Label.new()
-	hud_lv_label.position = Vector2(16, 88)
-	hud_lv_label.text = "LEVEL: 1   LV: 1"
+	hud_lv_label.position = Vector2(16, 86)
+	hud_lv_label.text = "LEVEL: 1"
 	root.add_child(hud_lv_label)
 
 	hud_score_label = Label.new()
-	hud_score_label.position = Vector2(190, 74)
-	hud_score_label.text = "0000"
+	hud_score_label.position = Vector2(120, 86)
+	hud_score_label.text = "SCORE: 0"
 	root.add_child(hud_score_label)
 
 	# 4 Slots Frugal de Ícones abaixo de LEVEL (usando os próprios sprites do projeto)
@@ -383,8 +383,8 @@ func _update_hud() -> void:
 	hud_hp_label.text = "%d/%d" % [hp, max_hp]
 	hud_atp_bar.value = atp
 	hud_atp_label.text = "%d/%d" % [int(atp), int(max_atp)]
-	hud_lv_label.text = "LEVEL: %d   LV: %d" % [GameState.player_level, GameState.player_level]
-	hud_score_label.text = "%d" % GameState.score
+	hud_lv_label.text = "LEVEL: %d" % GameState.player_level
+	hud_score_label.text = "SCORE: %d" % GameState.score
 	if hud_obj_label != null:
 		hud_obj_label.text = "PORTAIS: %d   INIMIGOS: %d" % [GameState.spawners_alive, GameState.enemies_alive]
 
