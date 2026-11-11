@@ -96,68 +96,68 @@ Criar uma issue bem estruturada é a garantia de entrega sem ambiguidades e com 
 
 ---
 
-## 📑 Índice Geral das 45 Issues por Grupo (Status do Protótipo Funcional — Marco 2)
+## 📑 Índice Geral das 45 Issues por Grupo
 
-> **Resumo de Progresso Atual:** **26 de 45 Issues Concluídas (`57,8%`)** — **Protótipo Funcional (Marco 2) 100% Operacional** em `scenes/cena_2d.tscn`.
+> **Nota:** Todas as issues abaixo estão desmarcadas (`[ ]`) para controle de implementação completa futura conforme o DoD final. O projeto conta atualmente com o **Protótipo Frugal Funcional** em `scenes/cena_2d.tscn`.
 
 ### 🏗️ Grupo 1: Infraestrutura, Ambiente Godot 4 e Arquitetura de Entradas
-- [x] **Issue #01:** `[Infraestrutura]` Configuração do `project.godot`, viewport 16:9 pixel-perfect (`Nearest`) e renderizador `gl_compatibility` *(Concluída)*
-- [x] **Issue #02:** `[Infraestrutura]` Padronização da árvore de diretórios (`src/`, `scenes/`, `sprites/`) e `.gitignore` *(Concluída)*
-- [x] **Issue #03:** `[Ambiente]` Configuração das Colisões Físicas (Paredes `TileMapLayer`, Player, Inimigos, Projéteis, Portais Spawners e Drops) *(Concluída)*
-- [x] **Issue #04:** `[Ambiente]` Suporte Dual Paritário (Teclado WASD/Setas + Mouse e Gamepad Analógicos + Gatilhos com Deadzone) *(Concluída)*
-- [x] **Issue #05:** `[Backend]` Refatoração e expansão do Singleton `GameState.gd` (Sinais `stats_updated`, Contadores de Spawners/Inimigos, Vitória e Save/Continue) *(Concluída)*
+- [ ] **Issue #01:** `[Infraestrutura]` Configuração do `project.godot`, viewport 1920x1080 (16:9) pixel-perfect e renderizador Compatibility
+- [ ] **Issue #02:** `[Infraestrutura]` Padronização da árvore de diretórios (`src/`, `scenes/`, `sprites/`, `audio/`, `resources/`) e `.gitignore`
+- [ ] **Issue #03:** `[Ambiente]` Configuração da Matriz de Camadas e Máscaras de Colisão Física de 32 bits (Layers 1 a 8)
+- [ ] **Issue #04:** `[Ambiente]` Mapeamento do `InputMap` Dual Paritário (Teclado + Mouse e Gamepad XInput/DirectInput com Deadzone)
+- [ ] **Issue #05:** `[Backend]` Refatoração e expansão do Singleton `GameState.gd` (Máquina de Estados Global, Sinais e Persistência)
 
 ### 🎨 Grupo 2: Criação Manual de Sprites e Assets Visuais (Pixel Art Autoral)
-- [x] **Issue #06:** `[Frontend]` Sprites do Protagonista e Arma Acoplada (`sprites/prota.png` e `sprites/cann.png`) *(Concluída no Protótipo)*
-- [x] **Issue #07:** `[Frontend]` Sprite de Projétil e Orbes de Coleta (`sprites/shotProtaMage.png`) *(Concluída no Protótipo)*
-- [x] **Issue #08:** `[Frontend]` Componentes Visuais do HUD Frugal (Retrato, Barras de HP/ATP e Slots com Sprites do Projeto) *(Concluída no Protótipo)*
-- [ ] **Issue #09:** `[Frontend]` Criação manual em Pixel Art dos Ícones dedicados das 4 Adaptações Mitóticas *(Pendente — Marco Final)*
-- [x] **Issue #10:** `[Frontend]` Padronização do Logo UTFPR (`sprites/logo_utfpr.png`) no Menu Principal *(Concluída no Protótipo)*
-- [x] **Issue #11:** `[Ambiente]` Configuração Pixel-Perfect (`default_texture_filter = 0 / Nearest`) na Godot 4 *(Concluída)*
+- [ ] **Issue #06:** `[Frontend]` Criação manual em Pixel Art do Spritesheet do Fagócito Primordial (Idle, Locomoção, Dash e Dano)
+- [ ] **Issue #07:** `[Frontend]` Criação manual em Pixel Art dos Sprites de Projéteis Enzimáticos (Padrão, Concentrado 3x e Impacto)
+- [ ] **Issue #08:** `[Frontend]` Criação manual em Pixel Art dos Componentes do HUD (Barras de HP/ATP, Molduras e Receptores Moleculares)
+- [ ] **Issue #09:** `[Frontend]` Criação manual em Pixel Art dos Ícones de Power-Ups Temporários e das 4 Adaptações Mitóticas
+- [ ] **Issue #10:** `[Frontend]` Criação manual de Assets de Telas, Logotipo *PhagoCrisis*, Padronização do Logo UTFPR e Hurt Vignette
+- [ ] **Issue #11:** `[Ambiente]` Importação Pixel-Perfect (`Filter = Nearest`) e montagem dos recursos `SpriteFrames` na Godot 4
 
 ### 🦠 Grupo 3: Cinemática, Física, Combate e Fagocitose do Jogador (`Player`)
-- [x] **Issue #12:** `[Backend]` Arquitetura do `Player` (`CharacterBody2D` em `src/Player.gd`), Pivô de Arma e Barra de Vida Local *(Concluída)*
-- [x] **Issue #13:** `[Backend]` Implementação da Movimentação Vetorial Top-Down (`220 px/s`) com `move_and_slide()` *(Concluída)*
-- [x] **Issue #14:** `[Backend]` Sistema de Mira Contínua em 360° (`WeaponPivot` com `cann.png`) Mouse Global vs. Analógico Direito *(Concluída)*
-- [x] **Issue #15:** `[Backend]` Implementação do Projétil (`src/Projectile.gd`, `550 px/s`), Colisão com Inimigos/Spawners/Paredes e Auto-Descarte *(Concluída)*
-- [x] **Issue #16:** `[Backend]` Sistema de Disparo Contínuo no Bocal da Arma com Alternância entre Leque de 5 Tiros (*Spread Shot*) e Tiro Único (`Q`) *(Concluída)*
-- [x] **Issue #17:** `[Backend]` Implementação do Dash (`E` / `RMB` / `Shift`) com *I-Frames*, Translucidez e Checagem de Parede (`test_move`) *(Concluída)*
-- [x] **Issue #18:** `[Backend]` Gestão Metabólica da Barra de ATP (`30/30`, Custo no Dash e Regeneração Passiva Contínua) *(Concluída)*
-- [x] **Issue #19:** `[Backend]` Mecânica de Quimiotaxia e Coleta de Orbes (`src/DropPickup.gd`, Raio Magnético `95 px`, Cura de HP/ATP e Buff de Tiro) *(Concluída)*
-- [x] **Issue #20:** `[Backend]` Sistema de HP (`6/6`), Dano de Contato dos Inimigos (`Enemy1..3`), Knockback, Flash de Dano e Condição de Derrota *(Concluída)*
-- [ ] **Issue #21:** `[Backend]` Integração das 4 Adaptações Mitóticas Permanentes pós-Boss *(Pendente — Marco Final)*
-- [ ] **Issue #22:** `[Frontend]` Anexação de `PointLight2D` e `GPUParticles2D` extras *(Pendente — Marco Final)*
+- [ ] **Issue #12:** `[Backend]` Arquitetura da Cena `Player.tscn` (`CharacterBody2D`), Colisor Layer 2 e Máquina de Estados Interna
+- [ ] **Issue #13:** `[Backend]` Implementação da Movimentação Protoplasmática Vetorial com Aceleração (`10.0`) e Atrito Hidrodinâmico (`6.0`)
+- [ ] **Issue #14:** `[Backend]` Sistema de Mira Contínua em 360° com Alternância Automática Mouse Global vs. Analógico Direito
+- [ ] **Issue #15:** `[Backend]` Implementação da Cena `EnzymeProjectile.tscn` (`Area2D`, Layer 4), Balística a `550 px/s` e `VisibleOnScreenNotifier2D`
+- [ ] **Issue #16:** `[Backend]` Sistema de Disparo Enzimático no `Marker2D` Frontal, Cadência (`0.33s`) e Power-Ups Cumulativos (Rapid, Spread, Damage)
+- [ ] **Issue #17:** `[Backend]` Implementação do Dash Citoplasmático (`480 px/s`, `0.2s`), Janela de *I-Frames*, Translucidez e Cooldown (`0.8s`)
+- [ ] **Issue #18:** `[Backend]` Gestão Metabólica da Barra de ATP (Capacidade `100`, Custo `25`, Delay `1.0s` e Regeneração `15 un/s`)
+- [ ] **Issue #19:** `[Backend]` Mecânica de Quimiotaxia e Fagocitose Tática (`Area2D` Raio `80 px`, Layer 6) com Atração Exponencial
+- [ ] **Issue #20:** `[Backend]` Sistema de Integridade Celular (HP), Dano, Knockback e Reação a Muco Viscoso (`-40%`) e Bio-Toxina ($DoT$)
+- [ ] **Issue #21:** `[Backend]` Integração das 4 Adaptações Mitóticas Permanentes no Jogador (+HP, +Regen ATP, Anti-Muco e +Dano)
+- [ ] **Issue #22:** `[Frontend]` Anexação da `Camera2D` com Suavização, Trauma de *Screen Shake* (`0.15s`), `PointLight2D` e `GPUParticles2D`
 
 ### 🖥️ Grupo 4: Interface Gráfica do Usuário — HUD e Feedback Tático
-- [x] **Issue #23:** `[Frontend]` Estruturação do HUD Frugal (`CanvasLayer` em `src/Player.gd`) no Canto Superior Esquerdo *(Concluída)*
-- [x] **Issue #24:** `[Frontend]` Implementação da Barra Vermelha de HP (`6/6`) no HUD + Mini Barra sob os pés do Player/Inimigos/Portais *(Concluída)*
-- [x] **Issue #25:** `[Frontend]` Implementação da Barra Azul Dinâmica de ATP (`30/30`) *(Concluída)*
-- [x] **Issue #26:** `[Frontend]` Implementação do Contador de `LEVEL`, `SCORE`, 4 Slots de Ícones e Contador de Objetivo (`PORTAIS: X   INIMIGOS: Y`) *(Concluída)*
-- [ ] **Issue #27:** `[Frontend]` Temporizador visual individual de Buffs de 15s e *Hurt Vignette* em tela cheia *(Pendente — Marco Final)*
+- [ ] **Issue #23:** `[Frontend]` Estruturação da Cena `HUD.tscn` (`CanvasLayer` Estático) e Layout Responsivo 16:9 nas Extremidades
+- [ ] **Issue #24:** `[Frontend]` Implementação da Barra de Integridade Celular (`TextureProgressBar` de HP) via Sinal `player_health_changed`
+- [ ] **Issue #25:** `[Frontend]` Implementação do Medidor Dinâmico de ATP com Interpolação (`Tween`) e Alerta Visual de Energia Insuficiente
+- [ ] **Issue #26:** `[Frontend]` Implementação do Contador de Biomassa (Score) e Painel dos 3 Slots de Receptores Moleculares
+- [ ] **Issue #27:** `[Frontend]` Implementação do Mostrador de Buffs Temporários (`15.0s` a `0.0s`) e Efeito de *Hurt Vignette*
 
 ### 🎬 Grupo 5: Fluxo de Telas, Menus e Máquina de Estados de Navegação
-- [ ] **Issue #28:** `[Frontend]` Implementação da `SplashScreen.tscn` isolada de `2.0s` *(Pendente — Marco Final)*
-- [x] **Issue #29:** `[Frontend]` Implementação da `main_menu.tscn` (Título, Logo UTFPR, `Jogar`, `Continuar` e `Sair`) *(Concluída)*
-- [ ] **Issue #30:** `[Frontend]` Implementação da `InstructionsScreen.tscn` dedicada no Menu *(Pendente — Marco Final; controles exibidos no rodapé do HUD)*
-- [ ] **Issue #31:** `[Frontend]` Implementação da `CreditsScreen.tscn` *(Pendente — Marco Final)*
-- [x] **Issue #32:** `[Frontend]` Implementação do Menu de Pausa (`src/menu/pause_menu.gd` com `PROCESS_MODE_ALWAYS`, Continuar, Reiniciar e Sair) *(Concluída)*
-- [x] **Issue #33:** `[Frontend]` Feedback de Conclusão de Fase ao destruir todos os Spawners e Inimigos (`notify_room_cleared()`) *(Concluída no Protótipo)*
-- [x] **Issue #34:** `[Frontend]` Feedback de Game Over ("Falência Imunológica") e Reinício Rápido (`R`) *(Concluída no Protótipo)*
-- [ ] **Issue #35:** `[Frontend]` Tela dedicada de Vitória Final após campanha completa *(Pendente — Marco Final)*
-- [ ] **Issue #36:** `[Frontend]` Transição Global com Fade In / Fade Out entre múltiplas salas *(Pendente — Marco Final)*
+- [ ] **Issue #28:** `[Frontend]` Implementação da `SplashScreen.tscn` (Exibição Institucional Obrigatória do Logo UTFPR por `2.0s` com Fade)
+- [ ] **Issue #29:** `[Frontend]` Refatoração e Estilização da `MainMenu.tscn` (Logo, Reforço UTFPR, Autores e Navegação por Foco de Gamepad)
+- [ ] **Issue #30:** `[Frontend]` Implementação da `InstructionsScreen.tscn` (Esquema Visual Dual Teclado/Mouse + Gamepad e Core Loop)
+- [ ] **Issue #31:** `[Frontend]` Implementação da `CreditsScreen.tscn` (Divisão Formal da Equipe, Atribuições e Referências de Áudio)
+- [ ] **Issue #32:** `[Frontend]` Refatoração da `PauseOverlay.tscn` (`PROCESS_MODE_WHEN_PAUSED`, Retomar, Instruções e Menu Principal)
+- [ ] **Issue #33:** `[Frontend]` Implementação da `LevelClearScreen.tscn` ("Tecido Purificado", Resumo da Fase e Adaptação Conquistada)
+- [ ] **Issue #34:** `[Frontend]` Implementação da `GameOverScreen.tscn` ("Falência Imunológica", Tentar Novamente e Menu Principal)
+- [ ] **Issue #35:** `[Frontend]` Implementação da `VictoryScreen.tscn` ("Expurgo Completo", Estatísticas Finais da Partida e Créditos)
+- [ ] **Issue #36:** `[Frontend]` Sistema Global de Transição entre Cenas (`TransitionLayer.tscn`) com Efeito de Fade In / Fade Out
 
 ### 🔊 Grupo 6: Curadoria, Síntese e Engenharia de Áudio do Jogador e UI
-- [ ] **Issue #37:** `[Ambiente]` Seleção e Síntese dos Efeitos Sonoros (SFX) de Combate e Locomoção *(Pendente — Marco Final)*
-- [ ] **Issue #38:** `[Ambiente]` Seleção e Síntese dos Efeitos Sonoros (SFX) de Interface e Menus *(Pendente — Marco Final)*
-- [ ] **Issue #39:** `[Backend]` Arquitetura do Singleton `SoundManager.gd` e Barramentos de Áudio *(Pendente — Marco Final)*
-- [ ] **Issue #40:** `[Backend]` Integração dos Gatilhos Sonoros no Jogador, Projéteis, Spawners e HUD *(Pendente — Marco Final)*
+- [ ] **Issue #37:** `[Ambiente]` Seleção, Síntese (sfxr.me / Audacity) e Edição dos Efeitos Sonoros (SFX) de Combate e Locomoção do Fagócito
+- [ ] **Issue #38:** `[Ambiente]` Seleção, Síntese e Padronização dos Efeitos Sonoros (SFX) de Interface, Menus, Alertas e Transições
+- [ ] **Issue #39:** `[Backend]` Arquitetura do Singleton `SoundManager.gd`, Barramentos do `AudioServer` (`Master`, `BGM`, `SFX`) e Pool Polifônico
+- [ ] **Issue #40:** `[Backend]` Integração dos Gatilhos Sonoros com Variação de Pitch (`pitch_scale`) no Jogador, Projéteis, HUD e Menus
 
 ### 🚀 Grupo 7: Integração dos Marcos (Protótipo e Final), Otimização e Builds PC/Web
-- [x] **Issue #41:** `[Infraestrutura]` **Integração e Validação do Marco 2 (Protótipo Jogável Funcional: Arena Completa + 3 Spawners Destrutíveis + 3 Tipos de Inimigos com A* e Dano + Armas/Drops + HUD)** *(Concluída)*
-- [ ] **Issue #42:** `[Infraestrutura]` Auditoria final de Performance 60 FPS na campanha completa *(Pendente — Marco Final)*
-- [ ] **Issue #43:** `[Infraestrutura]` Exportação das Builds Desktop PC (Windows `.exe` e Linux `.x86_64`) *(Pendente — Marco Final)*
-- [ ] **Issue #44:** `[Infraestrutura]` Exportação da Build Web (HTML5) para Itch.io *(Pendente — Marco Final)*
-- [ ] **Issue #45:** `[Documentação]` Consolidação do Relatório Final e Checklist de Entrega OPT010 *(Pendente — Marco Final)*
+- [ ] **Issue #41:** `[Infraestrutura]` Integração e Validação do Marco 2 (Protótipo Jogável: 1 Level + Mecânicas do Player + 1 Inimigo/Item + Dual Input)
+- [ ] **Issue #42:** `[Infraestrutura]` Auditoria de Performance para 60 FPS (Prevenção de Vazamento de Nós, `VisibleOnScreenNotifier2D` e Profiling)
+- [ ] **Issue #43:** `[Infraestrutura]` Configuração e Exportação das Builds Desktop PC (Windows `.exe` e Linux `.x86_64`) em Pacote `.zip`
+- [ ] **Issue #44:** `[Infraestrutura]` Configuração, Exportação e Validação da Build Web (HTML5) com `SharedArrayBuffer` no Itch.io
+- [ ] **Issue #45:** `[Documentação]` Consolidação da Documentação Técnica do Programador A, Licenciamento de Áudios e Checklist de Entrega Final
 
 ---
 

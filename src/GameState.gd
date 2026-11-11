@@ -11,16 +11,23 @@ var saved_player_position: Vector2 = Vector2.ZERO
 # Indica se existe uma partida salva.
 var has_saved_game: bool = false
 
-# Atributos de sessão da sala (HUD estilo imagem de referência)
+# Atributos de sessão da Fase 1 (5 Salas: 3 Combate, 1 Tesouro, 1 Boss)
 var score: int = 0
 var player_level: int = 1
+var current_room: int = 1
+var max_rooms: int = 5
 var enemies_alive: int = 0
 var spawners_alive: int = 0
+var treasure_remaining: int = 0
 var total_spawned: int = 0
 
 func reset_room_stats() -> void:
 	score = 0
 	player_level = 1
+	current_room = 1
+	enemies_alive = 0
+	spawners_alive = 0
+	treasure_remaining = 0
 	stats_updated.emit()
 
 func refresh_counts(tree: SceneTree) -> void:
@@ -28,13 +35,14 @@ func refresh_counts(tree: SceneTree) -> void:
 		return
 	enemies_alive = tree.get_nodes_in_group("enemies").size()
 	spawners_alive = tree.get_nodes_in_group("spawners").size()
+	treasure_remaining = tree.get_nodes_in_group("treasure").size()
 	stats_updated.emit()
 
 func check_room_victory(tree: SceneTree) -> void:
 	if tree == null:
 		return
 	refresh_counts(tree)
-	if spawners_alive <= 0 and enemies_alive <= 0:
+	if spawners_alive <= 0 and enemies_alive <= 0 and treasure_remaining <= 0:
 		var player = tree.get_first_node_in_group("player")
 		if player != null and player.has_method("notify_room_cleared"):
 			player.notify_room_cleared()

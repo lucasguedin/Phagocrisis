@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
 const DropScript = preload("res://src/DropPickup.gd")
+const TEX_VIRUS_MELEE = preload("res://sprites/virus_melee.png")
 
 enum Estado {
 	PATRULHA,
@@ -78,7 +79,9 @@ func _ready() -> void:
 		if sprite.position != Vector2.ZERO:
 			global_position = sprite.position
 			sprite.position = Vector2.ZERO
-		sprite.scale = Vector2(1.6, 1.6)
+		if sprite.texture == null or sprite.texture.resource_path.ends_with("inimigoVermei.png"):
+			sprite.texture = TEX_VIRUS_MELEE
+		sprite.scale = Vector2(1.5, 1.5)
 	if col_shape != null and col_shape.position != Vector2.ZERO:
 		col_shape.position = Vector2.ZERO
 
@@ -143,12 +146,12 @@ func _morrer() -> void:
 	remove_from_group("enemies")
 	GameState.add_score(score_value)
 
-	# Dropa orbe de energia/cura no chão
-	if tree != null and tree.current_scene != null and _random.randf() <= 0.65:
+	# Dropa orbe de energia/cura no chão raramente (12% de chance)
+	if tree != null and tree.current_scene != null and _random.randf() <= 0.12:
 		var drop := Area2D.new()
 		drop.set_script(DropScript)
 		tree.current_scene.call_deferred("add_child", drop)
-		var tipo: int = DropScript.DropType.SPREAD_BUFF if _random.randf() < 0.2 else DropScript.DropType.ENERGY_ORB
+		var tipo: int = DropScript.DropType.SPREAD_BUFF if _random.randf() < 0.18 else DropScript.DropType.ENERGY_ORB
 		drop.call_deferred("setup", global_position, tipo)
 
 	# Verifica se destruiu todos os spawners e limpou todos os inimigos

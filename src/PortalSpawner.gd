@@ -2,21 +2,19 @@ extends Sprite2D
 
 const Enemy1Script = preload("res://src/enemy/Enemy1.gd")
 const Enemy2Script = preload("res://src/enemy/Enemy2.gd")
-const Enemy3Script = preload("res://src/enemy/Enemy3.gd")
 const DropScript = preload("res://src/DropPickup.gd")
 
-const TEX_VERMEI = preload("res://sprites/inimigoVermei.png")
-const TEX_FANN = preload("res://sprites/fann.png")
-const TEX_DRAG = preload("res://sprites/drag.png")
+const TEX_MELEE = preload("res://sprites/virus_melee.png")
+const TEX_RANGED = preload("res://sprites/virus_ranged.png")
 
-@export var spawn_interval: float = 3.5
-@export var max_concurrent_enemies: int = 8
+@export var spawn_interval: float = 4.0
+@export var max_concurrent_enemies: int = 7
 @export var max_health: int = 10
 @export var score_value: int = 500
 
 var health: int = 10
 var _hurt_flash_timer: float = 0.0
-var _timer: float = 2.0
+var _timer: float = 2.2
 var _pulse_time: float = 0.0
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
@@ -42,7 +40,7 @@ func _process(delta: float) -> void:
 
 	_timer -= delta
 	if _timer <= 0.0:
-		_timer = spawn_interval + _rng.randf_range(-0.4, 0.5)
+		_timer = spawn_interval + _rng.randf_range(-0.4, 0.6)
 		_spawn_enemy()
 
 func take_damage(amount: int) -> void:
@@ -60,14 +58,13 @@ func _destruir_spawner() -> void:
 	remove_from_group("spawners")
 	GameState.add_score(score_value)
 
-	if tree != null and tree.current_scene != null:
-		for i in range(2):
-			var drop := Area2D.new()
-			drop.set_script(DropScript)
-			tree.current_scene.call_deferred("add_child", drop)
-			var drop_pos: Vector2 = global_position + Vector2(_rng.randf_range(-14.0, 14.0), _rng.randf_range(-14.0, 14.0))
-			var tipo: int = DropScript.DropType.SPREAD_BUFF if i == 0 else DropScript.DropType.ENERGY_ORB
-			drop.call_deferred("setup", drop_pos, tipo)
+	# Drop raro ao destruir portal (25% de chance de soltar 1 orbe)
+	if tree != null and tree.current_scene != null and _rng.randf() <= 0.25:
+		var drop := Area2D.new()
+		drop.set_script(DropScript)
+		tree.current_scene.call_deferred("add_child", drop)
+		var tipo: int = DropScript.DropType.SPREAD_BUFF if _rng.randf() < 0.25 else DropScript.DropType.ENERGY_ORB
+		drop.call_deferred("setup", global_position, tipo)
 
 	if tree != null:
 		GameState.check_room_victory(tree)
@@ -87,19 +84,16 @@ func _spawn_enemy() -> void:
 		return
 
 	var enemy := CharacterBody2D.new()
-	var tipo: int = _rng.randi_range(0, 2)
+	var tipo: int = _rng.randi_range(0, 1)
 
 	var spr := Sprite2D.new()
 	spr.name = "Fann"
 	if tipo == 0:
 		enemy.set_script(Enemy1Script)
-		spr.texture = TEX_VERMEI
-	elif tipo == 1:
-		enemy.set_script(Enemy2Script)
-		spr.texture = TEX_FANN
+		spr.texture = TEX_MELEE
 	else:
-		enemy.set_script(Enemy3Script)
-		spr.texture = TEX_DRAG
+		enemy.set_script(Enemy2Script)
+		spr.texture = TEX_RANGED
 
 	enemy.add_child(spr)
 

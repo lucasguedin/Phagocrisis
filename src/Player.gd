@@ -2,11 +2,21 @@ extends CharacterBody2D
 
 const ProjectileScript = preload("res://src/Projectile.gd")
 const DropScript = preload("res://src/DropPickup.gd")
+const PortalSpawnerScript = preload("res://src/PortalSpawner.gd")
+const Enemy1Script = preload("res://src/enemy/Enemy1.gd")
+const Enemy2Script = preload("res://src/enemy/Enemy2.gd")
+const BossScript = preload("res://src/enemy/Enemy3.gd")
+
 const TEX_PROTA = preload("res://sprites/prota.png")
 const TEX_CANN = preload("res://sprites/cann.png")
 const TEX_SHOT = preload("res://sprites/shotProtaMage.png")
 const TEX_PORTAL = preload("res://sprites/portalDungeon.png")
-const TEX_ENEMY = preload("res://sprites/inimigoVermei.png")
+const TEX_MELEE = preload("res://sprites/virus_melee.png")
+const TEX_RANGED = preload("res://sprites/virus_ranged.png")
+const TEX_BOSS = preload("res://sprites/boss_bacteriofago.png")
+const TEX_CHEST = preload("res://sprites/chest_treasure.png")
+const TEX_DOOR_CLOSED = preload("res://sprites/door_closed.png")
+const TEX_DOOR_OPEN = preload("res://sprites/door_open.png")
 
 @export var speed: float = 220.0
 @export var dash_distance: float = 96.0
@@ -21,6 +31,7 @@ var max_hp: int = 6
 var hp: int = 6
 var max_atp: float = 30.0
 var atp: float = 30.0
+var projectile_damage: int = 1
 
 # Combate e Mira 360°
 var aim_direction: Vector2 = Vector2.RIGHT
@@ -30,10 +41,14 @@ var _shoot_cooldown: float = 0.0
 var _invuln_timer: float = 0.0
 var _dash_timer: float = 0.0
 var _is_dead: bool = false
+var _room_cleared: bool = false
+var _transition_lock: float = 0.0
 
-# Nós visuais acoplados (arma e HUD frugal)
+# Nós visuais acoplados (arma, porta, tesouro e HUD frugal)
 var weapon_pivot: Node2D
 var weapon_sprite: Sprite2D
+var door_sprite: Sprite2D
+var chest_node: Sprite2D
 var hud_hp_bar: ProgressBar
 var hud_hp_label: Label
 var hud_atp_bar: ProgressBar
@@ -48,7 +63,6 @@ func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	GameState.reset_room_stats()
 
-	# Se o Sprite2D e CollisionShape2D estavam com offset antigo na cena, centraliza no Player
 	if sprite != null:
 		if sprite.position != Vector2.ZERO:
 			global_position = sprite.position
@@ -60,8 +74,21 @@ func _ready() -> void:
 	_setup_weapon_node()
 	_setup_frugal_hud()
 	GameState.stats_updated.connect(_update_hud)
-	GameState.call_deferred("refresh_counts", get_tree())
-	_update_hud()
+	call_deferred("_iniciar_primeira_sala")
+
+func _iniciar_primeira_sala() -> void:
+	_setup_door_node()
+	_carregar_sala(1)
+
+func _setup_door_node() -> void:
+	if get_tree().current_scene == null:
+		return
+	door_sprite = Sprite2D.new()
+	door_sprite.name = "DoorPortal"
+	door_sprite.texture = TEX_DOOR_CLOSED
+	door_sprite.scale = Vector2(2.0, 1.5)
+	door_sprite.position = Vector2(640.0, 36.0)
+	get_tree().current_scene.add_child(door_sprite)
 
 func _setup_weapon_node() -> void:
 	weapon_pivot = Node2D.new()
@@ -84,7 +111,7 @@ func _setup_frugal_hud() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	canvas.add_child(root)
 
-	# Moldura do Retrato do Protagonista (Canto Superior Esquerdo igual à imagem)
+	# Moldura do Retrato do Protagonista
 	var portrait_bg := ColorRect.new()
 	portrait_bg.position = Vector2(16, 16)
 	portrait_bg.size = Vector2(68, 68)
@@ -147,16 +174,16 @@ func _setup_frugal_hud() -> void:
 	# Labels de Nível da Fase (estático na fase) e SCORE
 	hud_lv_label = Label.new()
 	hud_lv_label.position = Vector2(16, 86)
-	hud_lv_label.text = "LEVEL: 1"
+	hud_lv_label.text = "LEVEL: 1   SALA: 1/5"
 	root.add_child(hud_lv_label)
 
 	hud_score_label = Label.new()
-	hud_score_label.position = Vector2(120, 86)
+	hud_score_label.position = Vector2(190, 86)
 	hud_score_label.text = "SCORE: 0"
 	root.add_child(hud_score_label)
 
-	# 4 Slots Frugal de Ícones abaixo de LEVEL (usando os próprios sprites do projeto)
-	var icons: Array[Texture2D] = [TEX_CANN, TEX_SHOT, TEX_PORTAL, TEX_ENEMY]
+	# 4 Slots Frugal de Ícones abaixo de LEVEL
+	var icons: Array = [TEX_CANN, TEX_MELEE, TEX_RANGED, TEX_BOSS]
 	for i in range(icons.size()):
 		var slot_bg := ColorRect.new()
 		slot_bg.position = Vector2(16 + i * 38, 114)
@@ -174,24 +201,168 @@ func _setup_frugal_hud() -> void:
 
 	hud_obj_label = Label.new()
 	hud_obj_label.position = Vector2(16, 152)
-	hud_obj_label.text = "PORTAIS: 3   INIMIGOS: 6"
+	hud_obj_label.text = "PORTAIS: 2   INIMIGOS: 4"
 	hud_obj_label.modulate = Color(1.0, 0.85, 0.35, 1.0)
 	root.add_child(hud_obj_label)
 
 	# Dica de Controles e Status Central
 	var help_lbl := Label.new()
 	help_lbl.position = Vector2(16, 688)
-	help_lbl.text = "[WASD] Mover | [Mouse/Stick] Mirar e Atirar | [Q] Alternar Leque/Simples | [E/RMB] Dash | [P] Pausa | [R] Reiniciar"
+	help_lbl.text = "[WASD] Mover | [Mouse/Stick] Mirar e Atirar | [Q] Leque/Simples | [E/RMB] Dash | [Porta Norte] Próxima Sala | [R] Reiniciar"
 	help_lbl.modulate = Color(0.9, 0.9, 0.9, 0.85)
 	root.add_child(help_lbl)
 
 	hud_status_label = Label.new()
-	hud_status_label.position = Vector2(340, 320)
-	hud_status_label.size = Vector2(600, 80)
+	hud_status_label.position = Vector2(240, 290)
+	hud_status_label.size = Vector2(800, 110)
 	hud_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hud_status_label.add_theme_font_size_override("font_size", 32)
+	hud_status_label.add_theme_font_size_override("font_size", 28)
 	hud_status_label.visible = false
 	root.add_child(hud_status_label)
+
+func _limpar_entidades_da_sala() -> void:
+	var scene := get_tree().current_scene
+	if scene == null:
+		return
+	for node in get_tree().get_nodes_in_group("spawners"):
+		node.remove_from_group("spawners")
+		node.queue_free()
+	for node in get_tree().get_nodes_in_group("enemies"):
+		node.remove_from_group("enemies")
+		node.queue_free()
+	for node in get_tree().get_nodes_in_group("treasure"):
+		node.remove_from_group("treasure")
+		node.queue_free()
+	for child in scene.get_children():
+		if child is Area2D and child != self:
+			child.queue_free()
+
+func _carregar_sala(num_sala: int) -> void:
+	var scene := get_tree().current_scene
+	if scene == null:
+		return
+
+	_limpar_entidades_da_sala()
+	GameState.current_room = num_sala
+	_room_cleared = false
+	_transition_lock = 0.65
+	hud_status_label.visible = false
+
+	if door_sprite != null:
+		door_sprite.visible = (num_sala < GameState.max_rooms)
+		door_sprite.texture = TEX_DOOR_CLOSED
+		door_sprite.modulate = Color.WHITE
+
+	# Posiciona o jogador na entrada sul da nova sala (ou no centro na Sala 1)
+	if num_sala == 1:
+		global_position = Vector2(560.0, 380.0)
+	else:
+		global_position = Vector2(640.0, 610.0)
+
+	if num_sala == 1:
+		# Sala 1: 2 Spawners + 2 Melee + 2 Ranged
+		_criar_spawner(Vector2(180, 140))
+		_criar_spawner(Vector2(1100, 560))
+		_criar_inimigo(0, Vector2(920, 220))
+		_criar_inimigo(0, Vector2(900, 480))
+		_criar_inimigo(1, Vector2(1040, 280))
+		_criar_inimigo(1, Vector2(1020, 440))
+	elif num_sala == 2:
+		# Sala 2: 3 Spawners + 3 Melee + 2 Ranged
+		_criar_spawner(Vector2(150, 140))
+		_criar_spawner(Vector2(1130, 140))
+		_criar_spawner(Vector2(1130, 560))
+		_criar_inimigo(0, Vector2(320, 240))
+		_criar_inimigo(0, Vector2(940, 240))
+		_criar_inimigo(0, Vector2(640, 200))
+		_criar_inimigo(1, Vector2(260, 420))
+		_criar_inimigo(1, Vector2(1020, 420))
+	elif num_sala == 3:
+		# Sala 3: 3 Spawners + 3 Melee + 3 Ranged
+		_criar_spawner(Vector2(150, 140))
+		_criar_spawner(Vector2(1130, 140))
+		_criar_spawner(Vector2(150, 560))
+		_criar_inimigo(0, Vector2(460, 220))
+		_criar_inimigo(0, Vector2(820, 220))
+		_criar_inimigo(0, Vector2(640, 280))
+		_criar_inimigo(1, Vector2(220, 320))
+		_criar_inimigo(1, Vector2(1060, 320))
+		_criar_inimigo(1, Vector2(640, 150))
+	elif num_sala == 4:
+		# Sala 4: Sala do Tesouro (Baú Biológico no centro, sem inimigos)
+		_criar_bau_tesouro(Vector2(640.0, 350.0))
+		hud_status_label.text = "SALA DO TESOURO!\nEncoste na Cápsula Dourada para melhorar o Fagócito!"
+		hud_status_label.modulate = Color(0.35, 0.95, 1.0)
+		hud_status_label.visible = true
+	elif num_sala == 5:
+		# Sala 5: Boss Final (Bacteriófago) + 2 Spawners + 2 Inimigos
+		_criar_spawner(Vector2(160, 150))
+		_criar_spawner(Vector2(1120, 150))
+		_criar_inimigo(2, Vector2(640, 210)) # Boss Bacteriófago
+		_criar_inimigo(0, Vector2(340, 260))
+		_criar_inimigo(1, Vector2(940, 260))
+
+	GameState.call_deferred("refresh_counts", get_tree())
+
+func _criar_spawner(pos: Vector2) -> void:
+	var sp := Sprite2D.new()
+	sp.texture = TEX_PORTAL
+	sp.position = pos
+	sp.set_script(PortalSpawnerScript)
+	get_tree().current_scene.add_child(sp)
+
+func _criar_inimigo(tipo: int, pos: Vector2) -> void:
+	var enemy := CharacterBody2D.new()
+	var spr := Sprite2D.new()
+	spr.name = "Fann"
+	if tipo == 0:
+		enemy.set_script(Enemy1Script)
+		spr.texture = TEX_MELEE
+	elif tipo == 1:
+		enemy.set_script(Enemy2Script)
+		spr.texture = TEX_RANGED
+	else:
+		enemy.set_script(BossScript)
+		spr.texture = TEX_BOSS
+	enemy.add_child(spr)
+
+	var col := CollisionShape2D.new()
+	col.name = "CollisionShape2D"
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(44, 44) if tipo == 2 else Vector2(28, 28)
+	col.shape = rect
+	enemy.add_child(col)
+
+	enemy.position = pos
+	get_tree().current_scene.add_child(enemy)
+
+func _criar_bau_tesouro(pos: Vector2) -> void:
+	chest_node = Sprite2D.new()
+	chest_node.name = "TreasureChest"
+	chest_node.texture = TEX_CHEST
+	chest_node.scale = Vector2(1.9, 1.9)
+	chest_node.position = pos
+	chest_node.add_to_group("treasure")
+	get_tree().current_scene.add_child(chest_node)
+
+func _coletar_bau_tesouro() -> void:
+	if chest_node == null or not is_instance_valid(chest_node):
+		return
+	chest_node.remove_from_group("treasure")
+	chest_node.queue_free()
+	chest_node = null
+
+	# Aplica upgrade do Tesouro antes do Boss
+	max_hp += 2
+	hp = max_hp
+	hud_hp_bar.max_value = max_hp
+	atp = max_atp
+	projectile_damage = 2
+	spread_mode = true
+	GameState.add_score(400)
+	GameState.check_room_victory(get_tree())
+	_update_hud()
+	queue_redraw()
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -229,6 +400,9 @@ func _physics_process(delta: float) -> void:
 	if _is_dead:
 		return
 
+	if _transition_lock > 0.0:
+		_transition_lock -= delta
+
 	if _invuln_timer > 0.0:
 		_invuln_timer -= delta
 		var blink: bool = int(_invuln_timer * 20.0) % 2 == 0
@@ -261,6 +435,17 @@ func _physics_process(delta: float) -> void:
 
 	velocity = direction * speed
 	move_and_slide()
+
+	# Verifica se encostou no Baú de Tesouro (Sala 4)
+	if chest_node != null and is_instance_valid(chest_node):
+		if global_position.distance_to(chest_node.global_position) <= 42.0:
+			_coletar_bau_tesouro()
+
+	# Verifica se entrou na Porta aberta no Norte para ir direto à próxima sala (sem corredor)
+	if _room_cleared and _transition_lock <= 0.0 and GameState.current_room < GameState.max_rooms:
+		if door_sprite != null and global_position.distance_to(door_sprite.global_position) <= 50.0:
+			_carregar_sala(GameState.current_room + 1)
+			return
 
 	# Verifica se encostou em algum inimigo durante o movimento
 	if _invuln_timer <= 0.0:
@@ -306,7 +491,6 @@ func _disparar_tiros() -> void:
 	_shoot_cooldown = 0.22 if spread_mode else 0.14
 	var muzzle_pos: Vector2 = weapon_sprite.global_position + aim_direction * 12.0
 
-	# Leque de 5 tiros igual à imagem de referência (ou tiro simples)
 	var angles_deg: Array = [-24.0, -12.0, 0.0, 12.0, 24.0] if spread_mode else [0.0]
 	var tint := Color(0.75, 1.0, 0.25, 1.0) if spread_mode else Color.WHITE
 
@@ -326,7 +510,7 @@ func _disparar_tiros() -> void:
 		proj.add_child(col)
 
 		get_tree().current_scene.add_child(proj)
-		proj.setup(muzzle_pos, aim_direction.rotated(deg_to_rad(float(deg))), tint)
+		proj.setup(muzzle_pos, aim_direction.rotated(deg_to_rad(float(deg))), tint, projectile_damage)
 
 func _tentar_dash() -> bool:
 	if _is_dead or atp < 6.0 or _dash_timer > 0.0:
@@ -354,7 +538,7 @@ func take_damage(amount: int = 1, source_pos: Vector2 = Vector2.ZERO) -> void:
 	if hp <= 0:
 		_is_dead = true
 		sprite.modulate = Color(0.5, 0.1, 0.1, 0.8)
-		hud_status_label.text = "FALÊNCIA IMUNOLÓGICA (GAME OVER)\nPressione [R] para Tentar Novamente"
+		hud_status_label.text = "FALÊNCIA IMUNOLÓGICA (GAME OVER)\nPressione [R] para Reiniciar a Fase"
 		hud_status_label.modulate = Color(1.0, 0.25, 0.25)
 		hud_status_label.visible = true
 
@@ -370,11 +554,21 @@ func collect_drop(drop_type: int) -> void:
 	queue_redraw()
 
 func notify_room_cleared() -> void:
-	if _is_dead:
+	if _is_dead or _room_cleared:
 		return
-	hud_status_label.text = "TODOS OS PORTAIS E INIMIGOS DESTRUÍDOS!\nFASE CONCLUÍDA! Pressione [R] para Jogar Novamente"
-	hud_status_label.modulate = Color(0.35, 1.0, 0.35)
-	hud_status_label.visible = true
+	_room_cleared = true
+	if GameState.current_room < GameState.max_rooms:
+		if door_sprite != null:
+			door_sprite.texture = TEX_DOOR_OPEN
+			door_sprite.modulate = Color(0.6, 1.4, 0.7, 1.0)
+		var prox_info: String = "SALA DO TESOURO" if GameState.current_room == 3 else ("SALA DO BOSS (BACTERIÓFAGO)" if GameState.current_room == 4 else ("SALA %d/5" % (GameState.current_room + 1)))
+		hud_status_label.text = "SALA %d/5 CONCLUÍDA!\nPasse pela PORTA AO NORTE para ir direto à %s!" % [GameState.current_room, prox_info]
+		hud_status_label.modulate = Color(0.35, 1.0, 0.45)
+		hud_status_label.visible = true
+	else:
+		hud_status_label.text = "BACTERIÓFAGO E INFECÇÃO VIRAL EXPURGADOS!\nFASE 1 CONCLUÍDA! Pressione [R] para Jogar Novamente"
+		hud_status_label.modulate = Color(0.35, 1.0, 0.35)
+		hud_status_label.visible = true
 
 func _update_hud() -> void:
 	if hud_hp_bar == null:
@@ -383,13 +577,15 @@ func _update_hud() -> void:
 	hud_hp_label.text = "%d/%d" % [hp, max_hp]
 	hud_atp_bar.value = atp
 	hud_atp_label.text = "%d/%d" % [int(atp), int(max_atp)]
-	hud_lv_label.text = "LEVEL: %d" % GameState.player_level
+	hud_lv_label.text = "LEVEL: %d   SALA: %d/%d" % [GameState.player_level, GameState.current_room, GameState.max_rooms]
 	hud_score_label.text = "SCORE: %d" % GameState.score
 	if hud_obj_label != null:
-		hud_obj_label.text = "PORTAIS: %d   INIMIGOS: %d" % [GameState.spawners_alive, GameState.enemies_alive]
+		if GameState.current_room == 4:
+			hud_obj_label.text = "TESOURO: %d   (Porta Norte Abre ao Coletar)" % GameState.treasure_remaining
+		else:
+			hud_obj_label.text = "PORTAIS: %d   INIMIGOS: %d" % [GameState.spawners_alive, GameState.enemies_alive]
 
 func _draw() -> void:
-	# Barrinha de vida embaixo do protagonista (igual à imagem de referência)
 	var bar_w: float = 34.0
 	var bar_h: float = 5.0
 	var bar_pos := Vector2(-bar_w * 0.5, 20.0)

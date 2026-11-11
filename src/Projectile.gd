@@ -10,11 +10,12 @@ var _hit_consumed: bool = false
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 
-func setup(pos: Vector2, dir: Vector2, spread_tint: Color = Color.WHITE) -> void:
+func setup(pos: Vector2, dir: Vector2, spread_tint: Color = Color.WHITE, proj_damage: int = 1) -> void:
 	global_position = pos
 	direction = dir.normalized()
 	rotation = direction.angle() + PI * 0.5 # shotProtaMage.png aponta para cima por padrão
 	modulate = spread_tint
+	damage = proj_damage
 
 func _physics_process(delta: float) -> void:
 	if _hit_consumed:

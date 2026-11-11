@@ -12,10 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://lamwie8rr2u1" path="res://sprites/portalDungeon.png" id="9_vob2u"]
 [ext_resource type="Texture2D" uid="uid://btf6myy7qrjtx" path="res://sprites/fann.png" id="10_3qlfd"]
 [ext_resource type="Texture2D" uid="uid://bn3ylue2oo6s2" path="res://sprites/drag.png" id="11_w4a5i"]
-[ext_resource type="Script" path="res://src/PortalSpawner.gd" id="12_spwnr"]
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_8w0r3"]
-size = Vector2(28, 28)
+[ext_resource type="Script" uid="uid://rvj6fqe6e6jl" path="res://src/PortalSpawner.gd" id="12_spwnr"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_snm3m"]
 texture = ExtResource("3_snm3m")
@@ -39,6 +36,9 @@ texture = ExtResource("4_3qlfd")
 physics_layer_0/collision_layer = 1
 sources/0 = SubResource("TileSetAtlasSource_3qlfd")
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8w0r3"]
+size = Vector2(28, 28)
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_h4t55"]
 size = Vector2(28, 28)
 
@@ -56,6 +56,11 @@ tile_set = SubResource("TileSet_h4t55")
 
 [node name="PortalDungeon" type="Sprite2D" parent="." unique_id=1120925743]
 position = Vector2(1140, 140)
+texture = ExtResource("9_vob2u")
+script = ExtResource("12_spwnr")
+
+[node name="PortalDungeon4" type="Sprite2D" parent="." unique_id=1387274468]
+position = Vector2(138, 150)
 texture = ExtResource("9_vob2u")
 script = ExtResource("12_spwnr")
 
