@@ -70,7 +70,7 @@ func _criar_tiro_boss(dir: Vector2, proj_speed: float) -> void:
 	proj.add_child(col)
 
 	get_tree().current_scene.add_child(proj)
-	proj.setup(global_position + dir * 24.0, dir, proj_speed)
+	proj.setup(global_position + dir * 24.0, dir, proj_speed, 2)
 
 func _draw() -> void:
 	if health > 0:

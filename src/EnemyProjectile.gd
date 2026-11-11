@@ -10,10 +10,11 @@ var _hit_consumed: bool = false
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 
-func setup(pos: Vector2, dir: Vector2, proj_speed: float = 280.0) -> void:
+func setup(pos: Vector2, dir: Vector2, proj_speed: float = 280.0, proj_damage: int = 1) -> void:
 	global_position = pos
 	direction = dir.normalized()
 	speed = proj_speed
+	damage = proj_damage
 
 func _physics_process(delta: float) -> void:
 	if _hit_consumed:

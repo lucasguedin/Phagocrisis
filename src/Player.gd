@@ -10,7 +10,6 @@ const BossScript = preload("res://src/enemy/Enemy3.gd")
 const TEX_PROTA = preload("res://sprites/prota.png")
 const TEX_CANN = preload("res://sprites/cann.png")
 const TEX_SHOT = preload("res://sprites/shotProtaMage.png")
-const TEX_PORTAL = preload("res://sprites/portalDungeon.png")
 const TEX_MELEE = preload("res://sprites/virus_melee.png")
 const TEX_RANGED = preload("res://sprites/virus_ranged.png")
 const TEX_BOSS = preload("res://sprites/boss_bacteriofago.png")
@@ -26,18 +25,19 @@ const TEX_DOOR_OPEN = preload("res://sprites/door_open.png")
 @onready var sprite: Sprite2D = $Player
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
-# Atributos vitais (estilo imagem de referência: HP 6/6, ATP 30/30)
+# Atributos vitais (HP 6/6, ATP 30/30)
 var max_hp: int = 6
 var hp: int = 6
 var max_atp: float = 30.0
 var atp: float = 30.0
 var projectile_damage: int = 1
 
-# Combate e Mira 360°
+# Combate e Mira 360° (3 tiros em linha reta por clique)
 var aim_direction: Vector2 = Vector2.RIGHT
 var ultima_direcao: Vector2 = Vector2.RIGHT
-var spread_mode: bool = true # Começa com tiro em leque igual à imagem (Q alterna)
 var _shoot_cooldown: float = 0.0
+var _burst_remaining: int = 0
+var _burst_step_timer: float = 0.0
 var _invuln_timer: float = 0.0
 var _dash_timer: float = 0.0
 var _is_dead: bool = false
@@ -57,6 +57,8 @@ var hud_lv_label: Label
 var hud_score_label: Label
 var hud_obj_label: Label
 var hud_status_label: Label
+var hud_slot_bgs: Array = []
+var hud_slot_icons: Array = []
 
 func _ready() -> void:
 	add_to_group("player")
@@ -182,9 +184,10 @@ func _setup_frugal_hud() -> void:
 	hud_score_label.text = "SCORE: 0"
 	root.add_child(hud_score_label)
 
-	# 4 Slots Frugal de Ícones abaixo de LEVEL
-	var icons: Array = [TEX_CANN, TEX_MELEE, TEX_RANGED, TEX_BOSS]
-	for i in range(icons.size()):
+	# Quadrados Laterais Dinâmicos: mostram APENAS os inimigos presentes na sala atual
+	hud_slot_bgs.clear()
+	hud_slot_icons.clear()
+	for i in range(3):
 		var slot_bg := ColorRect.new()
 		slot_bg.position = Vector2(16 + i * 38, 114)
 		slot_bg.size = Vector2(32, 32)
@@ -195,10 +198,12 @@ func _setup_frugal_hud() -> void:
 		var slot_icon := TextureRect.new()
 		slot_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		slot_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		slot_icon.texture = icons[i]
 		slot_icon.position = Vector2(2, 2)
 		slot_icon.size = Vector2(28, 28)
 		slot_bg.add_child(slot_icon)
+
+		hud_slot_bgs.append(slot_bg)
+		hud_slot_icons.append(slot_icon)
 
 	hud_obj_label = Label.new()
 	hud_obj_label.position = Vector2(16, 152)
@@ -209,7 +214,7 @@ func _setup_frugal_hud() -> void:
 	# Dica de Controles e Status Central
 	var help_lbl := Label.new()
 	help_lbl.position = Vector2(16, 688)
-	help_lbl.text = "[WASD] Mover | [Mouse/Stick] Mirar e Atirar | [Q] Leque/Simples | [E/RMB] Dash | [Porta Norte] Próxima Sala | [R] Reiniciar"
+	help_lbl.text = "[WASD] Mover | [Clique/Espaço] 3 Tiros em Linha Reta | [E/RMB] Dash | [Porta Norte] Próxima Sala | [R] Reiniciar"
 	help_lbl.modulate = Color(0.9, 0.9, 0.9, 0.85)
 	root.add_child(help_lbl)
 
@@ -220,6 +225,28 @@ func _setup_frugal_hud() -> void:
 	hud_status_label.add_theme_font_size_override("font_size", 28)
 	hud_status_label.visible = false
 	root.add_child(hud_status_label)
+
+func _atualizar_icones_inimigos_da_sala(num_sala: int) -> void:
+	var inimigos_na_sala: Array = []
+	if num_sala == 1:
+		inimigos_na_sala = [TEX_MELEE]
+	elif num_sala == 2:
+		inimigos_na_sala = [TEX_RANGED]
+	elif num_sala == 3:
+		inimigos_na_sala = [TEX_MELEE, TEX_RANGED]
+	elif num_sala == 4:
+		inimigos_na_sala = []
+	elif num_sala == 5:
+		inimigos_na_sala = [TEX_MELEE, TEX_RANGED, TEX_BOSS]
+
+	for i in range(hud_slot_bgs.size()):
+		var bg: ColorRect = hud_slot_bgs[i]
+		var ic: TextureRect = hud_slot_icons[i]
+		if i < inimigos_na_sala.size():
+			bg.visible = true
+			ic.texture = inimigos_na_sala[i]
+		else:
+			bg.visible = false
 
 func _limpar_entidades_da_sala() -> void:
 	var scene := get_tree().current_scene
@@ -246,8 +273,10 @@ func _carregar_sala(num_sala: int) -> void:
 	_limpar_entidades_da_sala()
 	GameState.current_room = num_sala
 	_room_cleared = false
+	_burst_remaining = 0
 	_transition_lock = 0.65
 	hud_status_label.visible = false
+	_atualizar_icones_inimigos_da_sala(num_sala)
 
 	if door_sprite != null:
 		door_sprite.visible = (num_sala < GameState.max_rooms)
@@ -261,34 +290,29 @@ func _carregar_sala(num_sala: int) -> void:
 		global_position = Vector2(640.0, 610.0)
 
 	if num_sala == 1:
-		# Sala 1: 2 Spawners + 2 Melee + 2 Ranged
-		_criar_spawner(Vector2(180, 260))
-		_criar_spawner(Vector2(1100, 560))
+		# Sala 1: SÓ MELEE (Spawners só Melee + Inimigos só Melee)
+		_criar_spawner(0, Vector2(180, 260))
+		_criar_spawner(0, Vector2(1100, 560))
 		_criar_inimigo(0, Vector2(920, 220))
 		_criar_inimigo(0, Vector2(900, 480))
-		_criar_inimigo(1, Vector2(1040, 280))
-		_criar_inimigo(1, Vector2(1020, 440))
+		_criar_inimigo(0, Vector2(1040, 340))
 	elif num_sala == 2:
-		# Sala 2: 3 Spawners + 3 Melee + 2 Ranged
-		_criar_spawner(Vector2(160, 260))
-		_criar_spawner(Vector2(1130, 140))
-		_criar_spawner(Vector2(1130, 560))
-		_criar_inimigo(0, Vector2(340, 260))
-		_criar_inimigo(0, Vector2(940, 240))
-		_criar_inimigo(0, Vector2(640, 200))
-		_criar_inimigo(1, Vector2(260, 440))
-		_criar_inimigo(1, Vector2(1020, 420))
+		# Sala 2: SÓ ATIRADOR (Spawners só Atirador + Inimigos só Atirador)
+		_criar_spawner(1, Vector2(160, 260))
+		_criar_spawner(1, Vector2(1130, 140))
+		_criar_inimigo(1, Vector2(340, 240))
+		_criar_inimigo(1, Vector2(940, 240))
+		_criar_inimigo(1, Vector2(1020, 460))
 	elif num_sala == 3:
-		# Sala 3: 3 Spawners + 3 Melee + 3 Ranged
-		_criar_spawner(Vector2(160, 260))
-		_criar_spawner(Vector2(1130, 140))
-		_criar_spawner(Vector2(160, 560))
+		# Sala 3: OS DOIS (Spawner Melee + Spawner Atirador + Inimigos Melee e Atirador)
+		_criar_spawner(0, Vector2(160, 260))
+		_criar_spawner(1, Vector2(1130, 140))
+		_criar_spawner(0, Vector2(160, 560))
+		_criar_spawner(1, Vector2(1130, 560))
 		_criar_inimigo(0, Vector2(460, 220))
 		_criar_inimigo(0, Vector2(820, 220))
-		_criar_inimigo(0, Vector2(640, 280))
-		_criar_inimigo(1, Vector2(220, 360))
-		_criar_inimigo(1, Vector2(1060, 320))
-		_criar_inimigo(1, Vector2(640, 150))
+		_criar_inimigo(1, Vector2(240, 360))
+		_criar_inimigo(1, Vector2(1040, 360))
 	elif num_sala == 4:
 		# Sala 4: Sala do Tesouro (Baú Biológico no centro, sem inimigos)
 		_criar_bau_tesouro(Vector2(640.0, 350.0))
@@ -296,21 +320,21 @@ func _carregar_sala(num_sala: int) -> void:
 		hud_status_label.modulate = Color(0.35, 0.95, 1.0)
 		hud_status_label.visible = true
 	elif num_sala == 5:
-		# Sala 5: Boss Final (Bacteriófago) + 2 Spawners + 2 Inimigos
-		_criar_spawner(Vector2(160, 260))
-		_criar_spawner(Vector2(1120, 150))
-		_criar_inimigo(2, Vector2(640, 210)) # Boss Bacteriófago
-		_criar_inimigo(0, Vector2(340, 260))
-		_criar_inimigo(1, Vector2(940, 260))
+		# Sala 5: TODOS + BACTERIÓFAGO (Spawner Melee + Spawner Atirador + Melee + Atirador + Boss)
+		_criar_spawner(0, Vector2(160, 260))
+		_criar_spawner(1, Vector2(1120, 260))
+		_criar_inimigo(2, Vector2(640, 200)) # Boss Bacteriófago
+		_criar_inimigo(0, Vector2(340, 240))
+		_criar_inimigo(1, Vector2(940, 240))
 
 	GameState.call_deferred("refresh_counts", get_tree())
 
-func _criar_spawner(pos: Vector2) -> void:
+func _criar_spawner(tipo_spawner: int, pos: Vector2) -> void:
 	var sp := Sprite2D.new()
-	sp.texture = TEX_PORTAL
 	sp.position = pos
 	sp.set_script(PortalSpawnerScript)
 	get_tree().current_scene.add_child(sp)
+	sp.setup_spawner(tipo_spawner)
 
 func _criar_inimigo(tipo: int, pos: Vector2) -> void:
 	var enemy := CharacterBody2D.new()
@@ -359,7 +383,6 @@ func _coletar_bau_tesouro() -> void:
 	hud_hp_bar.max_value = max_hp
 	atp = max_atp
 	projectile_damage = 2
-	spread_mode = true
 	GameState.add_score(400)
 	GameState.check_room_victory(get_tree())
 	_update_hud()
@@ -374,14 +397,16 @@ func _input(event: InputEvent) -> void:
 			get_tree().paused = false
 			get_tree().reload_current_scene()
 			return
-		if event.keycode == KEY_Q:
-			spread_mode = not spread_mode
-			return
 		if event.keycode == KEY_E or event.keycode == KEY_SHIFT:
 			_tentar_dash()
+		if event.keycode == KEY_SPACE and _shoot_cooldown <= 0.0 and _burst_remaining <= 0:
+			_iniciar_sequencia_3_tiros()
 
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
-		_tentar_dash()
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			_tentar_dash()
+		elif event.button_index == MOUSE_BUTTON_LEFT and _shoot_cooldown <= 0.0 and _burst_remaining <= 0:
+			_iniciar_sequencia_3_tiros()
 
 func abrir_menu_pausa() -> void:
 	if pause_menu_scene == null or get_tree().paused:
@@ -461,16 +486,24 @@ func _physics_process(delta: float) -> void:
 	# Atualiza Mira 360° da arma (Mouse ou Stick Direito)
 	_atualizar_mira_e_arma()
 
-	# Disparo contínuo (Botão Esquerdo do Mouse, Espaço ou Gatilho Direito)
+	# Processa sequência de 3 tiros em linha reta por clique
 	if _shoot_cooldown > 0.0:
 		_shoot_cooldown -= delta
-	var quer_atirar: bool = (
-		Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
-		or Input.is_key_pressed(KEY_SPACE)
-		or Input.get_joy_axis(0, JOY_AXIS_TRIGGER_RIGHT) > 0.3
-	)
-	if quer_atirar and _shoot_cooldown <= 0.0:
-		_disparar_tiros()
+
+	if _burst_remaining > 0:
+		_burst_step_timer -= delta
+		if _burst_step_timer <= 0.0:
+			_burst_step_timer = 0.065
+			_burst_remaining -= 1
+			_disparar_tiro_reto()
+	else:
+		var quer_atirar_cont: bool = (
+			Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+			or Input.is_key_pressed(KEY_SPACE)
+			or Input.get_joy_axis(0, JOY_AXIS_TRIGGER_RIGHT) > 0.3
+		)
+		if quer_atirar_cont and _shoot_cooldown <= 0.0:
+			_iniciar_sequencia_3_tiros()
 
 	queue_redraw()
 
@@ -488,30 +521,34 @@ func _atualizar_mira_e_arma() -> void:
 	weapon_sprite.flip_v = absf(ang) > PI * 0.5
 	sprite.flip_h = aim_direction.x < 0.0
 
-func _disparar_tiros() -> void:
-	_shoot_cooldown = 0.22 if spread_mode else 0.14
+func _iniciar_sequencia_3_tiros() -> void:
+	_shoot_cooldown = 0.36
+	_burst_remaining = 2
+	_burst_step_timer = 0.065
+	_disparar_tiro_reto()
+
+func _disparar_tiro_reto() -> void:
+	if get_tree().current_scene == null:
+		return
 	var muzzle_pos: Vector2 = weapon_sprite.global_position + aim_direction * 12.0
+	var tint := Color(0.45, 1.0, 0.55, 1.0) if projectile_damage > 1 else Color.WHITE
 
-	var angles_deg: Array = [-24.0, -12.0, 0.0, 12.0, 24.0] if spread_mode else [0.0]
-	var tint := Color(0.75, 1.0, 0.25, 1.0) if spread_mode else Color.WHITE
+	var proj := Area2D.new()
+	proj.set_script(ProjectileScript)
 
-	for deg in angles_deg:
-		var proj := Area2D.new()
-		proj.set_script(ProjectileScript)
+	var spr := Sprite2D.new()
+	spr.texture = TEX_SHOT
+	spr.scale = Vector2(0.95, 1.15)
+	proj.add_child(spr)
 
-		var spr := Sprite2D.new()
-		spr.texture = TEX_SHOT
-		spr.scale = Vector2(0.9, 1.1)
-		proj.add_child(spr)
+	var col := CollisionShape2D.new()
+	var shape := CircleShape2D.new()
+	shape.radius = 6.0
+	col.shape = shape
+	proj.add_child(col)
 
-		var col := CollisionShape2D.new()
-		var shape := CircleShape2D.new()
-		shape.radius = 6.0
-		col.shape = shape
-		proj.add_child(col)
-
-		get_tree().current_scene.add_child(proj)
-		proj.setup(muzzle_pos, aim_direction.rotated(deg_to_rad(float(deg))), tint, projectile_damage)
+	get_tree().current_scene.add_child(proj)
+	proj.setup(muzzle_pos, aim_direction, tint, projectile_damage)
 
 func _tentar_dash() -> bool:
 	if _is_dead or atp < 6.0 or _dash_timer > 0.0:
@@ -545,7 +582,8 @@ func take_damage(amount: int = 1, source_pos: Vector2 = Vector2.ZERO) -> void:
 
 func collect_drop(drop_type: int) -> void:
 	if drop_type == DropScript.DropType.SPREAD_BUFF:
-		spread_mode = true
+		hp = mini(max_hp, hp + 2)
+		atp = max_atp
 		GameState.add_score(150)
 	else:
 		hp = mini(max_hp, hp + 1)

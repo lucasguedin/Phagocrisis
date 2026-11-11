@@ -18,18 +18,18 @@ const DIRECOES_CARDINAIS: Array[Vector2] = [
 const CELULA_INVALIDA: Vector2i = Vector2i(-999999, -999999)
 
 @export_group("Movimento")
-@export var patrol_speed: float = 75.0
-@export var chase_speed: float = 115.0
-@export var acceleration: float = 350.0
-@export var deceleration: float = 400.0
+@export var patrol_speed: float = 120.0
+@export var chase_speed: float = 185.0
+@export var acceleration: float = 650.0
+@export var deceleration: float = 550.0
 
 @export_group("Combate")
 @export var max_health: int = 3
 @export var score_value: int = 150
 
 @export_group("Detecção do Player")
-@export var detection_distance: float = 420.0
-@export var lose_distance: float = 650.0
+@export var detection_distance: float = 950.0
+@export var lose_distance: float = 1300.0
 @export var stop_distance: float = 0.0
 
 @export_group("Patrulha")

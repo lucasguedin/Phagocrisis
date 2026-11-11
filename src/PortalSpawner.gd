@@ -6,24 +6,36 @@ const DropScript = preload("res://src/DropPickup.gd")
 
 const TEX_MELEE = preload("res://sprites/virus_melee.png")
 const TEX_RANGED = preload("res://sprites/virus_ranged.png")
+const TEX_SPAWNER_MELEE = preload("res://sprites/spawner_melee.png")
+const TEX_SPAWNER_RANGED = preload("res://sprites/spawner_ranged.png")
 
-@export var spawn_interval: float = 4.0
+@export var spawner_type: int = 0 # 0 = Só Melee, 1 = Só Atirador
+@export var spawn_interval: float = 3.8
 @export var max_concurrent_enemies: int = 7
 @export var max_health: int = 10
 @export var score_value: int = 500
 
 var health: int = 10
 var _hurt_flash_timer: float = 0.0
-var _timer: float = 2.2
+var _timer: float = 2.0
 var _pulse_time: float = 0.0
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 func _ready() -> void:
 	_rng.randomize()
 	health = max_health
+	_aplicar_textura_tipo()
 	add_to_group("spawners")
 	GameState.call_deferred("refresh_counts", get_tree())
 	queue_redraw()
+
+func setup_spawner(tipo: int) -> void:
+	spawner_type = tipo
+	_aplicar_textura_tipo()
+	queue_redraw()
+
+func _aplicar_textura_tipo() -> void:
+	texture = TEX_SPAWNER_MELEE if spawner_type == 0 else TEX_SPAWNER_RANGED
 
 func _process(delta: float) -> void:
 	if _hurt_flash_timer > 0.0:
@@ -31,7 +43,7 @@ func _process(delta: float) -> void:
 		modulate = Color(2.8, 0.35, 0.55, 1.0) if _hurt_flash_timer > 0.0 else Color.WHITE
 
 	_pulse_time += delta * 4.0
-	var s: float = 1.15 + 0.12 * sin(_pulse_time)
+	var s: float = 1.25 + 0.12 * sin(_pulse_time)
 	scale = Vector2(s, s)
 
 	var vivos: int = get_tree().get_nodes_in_group("enemies").size()
@@ -63,8 +75,7 @@ func _destruir_spawner() -> void:
 		var drop := Area2D.new()
 		drop.set_script(DropScript)
 		tree.current_scene.call_deferred("add_child", drop)
-		var tipo: int = DropScript.DropType.SPREAD_BUFF if _rng.randf() < 0.25 else DropScript.DropType.ENERGY_ORB
-		drop.call_deferred("setup", global_position, tipo)
+		drop.call_deferred("setup", global_position, DropScript.DropType.ENERGY_ORB)
 
 	if tree != null:
 		GameState.check_room_victory(tree)
@@ -77,18 +88,17 @@ func _draw() -> void:
 	var ratio: float = clampf(float(health) / float(max_health), 0.0, 1.0)
 	var pos := Vector2(-w * 0.5, 20.0)
 	draw_rect(Rect2(pos - Vector2(1, 1), Vector2(w + 2, h + 2)), Color(0.08, 0.05, 0.12, 0.95))
-	draw_rect(Rect2(pos, Vector2(w * ratio, h)), Color(0.85, 0.25, 0.95, 1.0))
+	var fill_col := Color(0.95, 0.25, 0.35, 1.0) if spawner_type == 0 else Color(0.35, 0.95, 0.55, 1.0)
+	draw_rect(Rect2(pos, Vector2(w * ratio, h)), fill_col)
 
 func _spawn_enemy() -> void:
 	if get_tree().current_scene == null:
 		return
 
 	var enemy := CharacterBody2D.new()
-	var tipo: int = _rng.randi_range(0, 1)
-
 	var spr := Sprite2D.new()
 	spr.name = "Fann"
-	if tipo == 0:
+	if spawner_type == 0:
 		enemy.set_script(Enemy1Script)
 		spr.texture = TEX_MELEE
 	else:
