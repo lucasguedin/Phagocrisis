@@ -189,15 +189,16 @@ func _setup_frugal_hud() -> void:
 		slot_bg.position = Vector2(16 + i * 38, 114)
 		slot_bg.size = Vector2(32, 32)
 		slot_bg.color = Color(0.14, 0.14, 0.20, 0.9)
+		slot_bg.clip_contents = true
 		root.add_child(slot_bg)
 
 		var slot_icon := TextureRect.new()
-		slot_icon.texture = icons[i]
-		slot_icon.position = Vector2(18 + i * 38, 116)
-		slot_icon.size = Vector2(28, 28)
 		slot_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		slot_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		root.add_child(slot_icon)
+		slot_icon.texture = icons[i]
+		slot_icon.position = Vector2(2, 2)
+		slot_icon.size = Vector2(28, 28)
+		slot_bg.add_child(slot_icon)
 
 	hud_obj_label = Label.new()
 	hud_obj_label.position = Vector2(16, 152)
@@ -261,7 +262,7 @@ func _carregar_sala(num_sala: int) -> void:
 
 	if num_sala == 1:
 		# Sala 1: 2 Spawners + 2 Melee + 2 Ranged
-		_criar_spawner(Vector2(180, 140))
+		_criar_spawner(Vector2(180, 260))
 		_criar_spawner(Vector2(1100, 560))
 		_criar_inimigo(0, Vector2(920, 220))
 		_criar_inimigo(0, Vector2(900, 480))
@@ -269,23 +270,23 @@ func _carregar_sala(num_sala: int) -> void:
 		_criar_inimigo(1, Vector2(1020, 440))
 	elif num_sala == 2:
 		# Sala 2: 3 Spawners + 3 Melee + 2 Ranged
-		_criar_spawner(Vector2(150, 140))
+		_criar_spawner(Vector2(160, 260))
 		_criar_spawner(Vector2(1130, 140))
 		_criar_spawner(Vector2(1130, 560))
-		_criar_inimigo(0, Vector2(320, 240))
+		_criar_inimigo(0, Vector2(340, 260))
 		_criar_inimigo(0, Vector2(940, 240))
 		_criar_inimigo(0, Vector2(640, 200))
-		_criar_inimigo(1, Vector2(260, 420))
+		_criar_inimigo(1, Vector2(260, 440))
 		_criar_inimigo(1, Vector2(1020, 420))
 	elif num_sala == 3:
 		# Sala 3: 3 Spawners + 3 Melee + 3 Ranged
-		_criar_spawner(Vector2(150, 140))
+		_criar_spawner(Vector2(160, 260))
 		_criar_spawner(Vector2(1130, 140))
-		_criar_spawner(Vector2(150, 560))
+		_criar_spawner(Vector2(160, 560))
 		_criar_inimigo(0, Vector2(460, 220))
 		_criar_inimigo(0, Vector2(820, 220))
 		_criar_inimigo(0, Vector2(640, 280))
-		_criar_inimigo(1, Vector2(220, 320))
+		_criar_inimigo(1, Vector2(220, 360))
 		_criar_inimigo(1, Vector2(1060, 320))
 		_criar_inimigo(1, Vector2(640, 150))
 	elif num_sala == 4:
@@ -296,7 +297,7 @@ func _carregar_sala(num_sala: int) -> void:
 		hud_status_label.visible = true
 	elif num_sala == 5:
 		# Sala 5: Boss Final (Bacteriófago) + 2 Spawners + 2 Inimigos
-		_criar_spawner(Vector2(160, 150))
+		_criar_spawner(Vector2(160, 260))
 		_criar_spawner(Vector2(1120, 150))
 		_criar_inimigo(2, Vector2(640, 210)) # Boss Bacteriófago
 		_criar_inimigo(0, Vector2(340, 260))
