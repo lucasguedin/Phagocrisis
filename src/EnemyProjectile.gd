@@ -1,54 +1,43 @@
 extends Area2D
 
-@export var speed: float = 280.0
-@export var damage: int = 1
-
-var direction: Vector2 = Vector2.DOWN
-var _lifetime: float = 4.0
-var _hit_consumed: bool = false
+var vetor_mov: Vector2 = Vector2.DOWN
+var velocidade: float = 280.0
+var dano_ataque: int = 1
+var tempo_ativo: float = 4.0
+var ja_colidiu: bool = false
 
 func _ready() -> void:
-	body_entered.connect(_on_body_entered)
+	body_entered.connect(_on_body)
 
-func setup(pos: Vector2, dir: Vector2, proj_speed: float = 280.0, proj_damage: int = 1) -> void:
-	global_position = pos
-	direction = dir.normalized()
-	speed = proj_speed
-	damage = proj_damage
+func lancar(pos_ini: Vector2, dir: Vector2, vel: float = 280.0, dano: int = 1):
+	global_position = pos_ini
+	vetor_mov = dir.normalized()
+	velocidade = vel
+	dano_ataque = dano
+
 
 func _physics_process(delta: float) -> void:
-	if _hit_consumed:
-		return
+	if not ja_colidiu:
+		translate(vetor_mov * velocidade * delta)
+		rotation += 6.0 * delta
+		tempo_ativo -= delta
 
-	global_position += direction * speed * delta
-	rotation += 6.0 * delta
-	_lifetime -= delta
-	if _lifetime <= 0.0:
-		queue_free()
-		return
-	if global_position.x < -32.0 or global_position.x > 1312.0 or global_position.y < -32.0 or global_position.y > 752.0:
-		queue_free()
-		return
-
-	var player := get_tree().get_first_node_in_group("player") as Node2D
-	if player != null and is_instance_valid(player):
-		if global_position.distance_to(player.global_position) <= 20.0:
-			if player.has_method("take_damage"):
-				_hit_consumed = true
-				player.take_damage(damage, global_position)
+		if tempo_ativo <= 0.0 or absf(global_position.x - 640.0) > 680.0 or absf(global_position.y - 360.0) > 400.0:
+			queue_free()
+		else:
+			var alvo = get_tree().get_first_node_in_group("player") as Node2D
+			if alvo != null and is_instance_valid(alvo) and global_position.distance_to(alvo.global_position) <= 20.0:
+				ja_colidiu = true
+				alvo.take_damage(dano_ataque, global_position)
 				queue_free()
 
-func _on_body_entered(body: Node) -> void:
-	if _hit_consumed:
+func _on_body(b: Node) -> void:
+	if ja_colidiu or b.is_in_group("enemies") or b.is_in_group("spawners"):
 		return
-	if body.is_in_group("enemies") or body.is_in_group("spawners"):
-		return
-	if body.is_in_group("player"):
-		if body.has_method("take_damage"):
-			_hit_consumed = true
-			body.take_damage(damage, global_position)
-			queue_free()
-	elif body is TileMapLayer or body is StaticBody2D:
-		_hit_consumed = true
+	if b.is_in_group("player") and b.has_method("take_damage"):
+		ja_colidiu = true
+		b.take_damage(dano_ataque, global_position)
 		queue_free()
-
+	elif b is TileMapLayer or b is StaticBody2D:
+		ja_colidiu = true
+		queue_free()

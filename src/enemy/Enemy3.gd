@@ -1,11 +1,11 @@
 extends "res://src/enemy/Enemy1.gd"
 
-const EnemyProjScript = preload("res://src/EnemyProjectile.gd")
+const TiroBoss = preload("res://src/EnemyProjectile.gd")
 const TEX_BOSS = preload("res://sprites/boss_bacteriofago.png")
-const TEX_VIRUS_SHOT = preload("res://sprites/virus_shot.png")
+const TEX_TIRO = preload("res://sprites/virus_shot.png")
 
-var _boss_attack_timer: float = 1.6
-var _attack_cycle: int = 0
+var espera_ataque: float = 1.6
+var num_ataque: int = 0
 
 func _ready() -> void:
 	patrol_speed = 70.0
@@ -21,62 +21,54 @@ func _ready() -> void:
 		sprite.texture = TEX_BOSS
 		sprite.scale = Vector2(1.75, 1.75)
 
+
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
 	queue_redraw()
-	if not is_instance_valid(_player):
+	if not is_instance_valid(_player) or get_tree().current_scene == null:
 		return
 
-	_boss_attack_timer -= delta
-	if _boss_attack_timer <= 0.0:
-		_attack_cycle += 1
-		if _attack_cycle % 3 == 0:
-			_boss_attack_timer = 2.1
-			_disparar_anel_viral()
-		else:
-			_boss_attack_timer = 1.45
-			_disparar_rajada_tripla()
-
-func _disparar_rajada_tripla() -> void:
-	if get_tree() == null or get_tree().current_scene == null or not is_instance_valid(_player):
+	espera_ataque -= delta
+	if espera_ataque > 0.0:
 		return
-	var base_dir: Vector2 = global_position.direction_to(_player.global_position)
-	var angs: Array = [-20.0, 0.0, 20.0]
-	for deg in angs:
-		_criar_tiro_boss(base_dir.rotated(deg_to_rad(float(deg))), 300.0)
 
-func _disparar_anel_viral() -> void:
-	if get_tree() == null or get_tree().current_scene == null:
-		return
-	for i in range(8):
-		var ang: float = float(i) * (PI * 0.25)
-		var dir := Vector2(cos(ang), sin(ang))
-		_criar_tiro_boss(dir, 235.0)
+	num_ataque += 1
+	match num_ataque % 3:
+		0:
+			espera_ataque = 2.1
+			for i in range(8):
+				var ang := float(i) * (PI * 0.25)
+				_soltar_projetil(Vector2(cos(ang), sin(ang)), 235.0)
+		_:
+			espera_ataque = 1.45
+			var base := global_position.direction_to(_player.global_position)
+			for desvio in [-20.0, 0.0, 20.0]:
+				_soltar_projetil(base.rotated(deg_to_rad(desvio)), 300.0)
 
-func _criar_tiro_boss(dir: Vector2, proj_speed: float) -> void:
-	var proj := Area2D.new()
-	proj.set_script(EnemyProjScript)
+func _soltar_projetil(dir: Vector2, vel: float):
+	var p = Area2D.new()
+	p.set_script(TiroBoss)
 
-	var spr := Sprite2D.new()
-	spr.texture = TEX_VIRUS_SHOT
-	spr.scale = Vector2(1.45, 1.45)
-	spr.modulate = Color(0.85, 0.35, 1.0, 1.0)
-	proj.add_child(spr)
+	var s = Sprite2D.new()
+	s.texture = TEX_TIRO
+	s.scale = Vector2(1.45, 1.45)
+	s.modulate = Color(0.85, 0.35, 1.0)
+	p.add_child(s)
 
-	var col := CollisionShape2D.new()
-	var shape := CircleShape2D.new()
-	shape.radius = 7.0
-	col.shape = shape
-	proj.add_child(col)
+	var col = CollisionShape2D.new()
+	var circ = CircleShape2D.new()
+	circ.radius = 7.0
+	col.shape = circ
+	p.add_child(col)
 
-	get_tree().current_scene.add_child(proj)
-	proj.setup(global_position + dir * 24.0, dir, proj_speed, 2)
+	get_tree().current_scene.add_child(p)
+	# ataque a distancia do bacteriofago tira 2 de vida
+	p.lancar(global_position + dir * 24.0, dir, vel, 2)
 
 func _draw() -> void:
 	if health > 0:
-		var w: float = 68.0
-		var h: float = 7.0
-		var ratio: float = clampf(float(health) / float(max_health), 0.0, 1.0)
-		var pos := Vector2(-w * 0.5, -56.0)
-		draw_rect(Rect2(pos - Vector2(1, 1), Vector2(w + 2, h + 2)), Color(0.08, 0.04, 0.14, 0.95))
-		draw_rect(Rect2(pos, Vector2(w * ratio, h)), Color(0.45, 1.0, 0.35, 1.0))
+		var larg := 68.0
+		var orig := Vector2(-larg * 0.5, -56.0)
+		draw_rect(Rect2(orig - Vector2(1, 1), Vector2(larg + 2, 9.0)), Color(0.08, 0.04, 0.14, 0.95))
+		var prop := clampf(float(health) / float(max_health), 0.0, 1.0)
+		draw_rect(Rect2(orig, Vector2(larg * prop, 7.0)), Color(0.45, 1.0, 0.35))

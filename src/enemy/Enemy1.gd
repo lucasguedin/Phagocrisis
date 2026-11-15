@@ -1,12 +1,9 @@
 extends CharacterBody2D
 
-const DropScript = preload("res://src/DropPickup.gd")
+const ScriptDrop = preload("res://src/DropPickup.gd")
 const TEX_VIRUS_MELEE = preload("res://sprites/virus_melee.png")
 
-enum Estado {
-	PATRULHA,
-	PERSEGUINDO
-}
+enum Estado { PATRULHA, PERSEGUINDO }
 
 const DIRECOES_CARDINAIS: Array[Vector2] = [
 	Vector2.LEFT,
@@ -14,7 +11,6 @@ const DIRECOES_CARDINAIS: Array[Vector2] = [
 	Vector2.UP,
 	Vector2.DOWN
 ]
-
 const CELULA_INVALIDA: Vector2i = Vector2i(-999999, -999999)
 
 @export_group("Movimento")
@@ -47,8 +43,8 @@ const CELULA_INVALIDA: Vector2i = Vector2i(-999999, -999999)
 @onready var col_shape: CollisionShape2D = get_node_or_null("CollisionShape2D") as CollisionShape2D
 
 var health: int = 3
-var _hurt_flash_timer: float = 0.0
-var _attack_cooldown: float = 0.0
+var piscar_dano: float = 0.0
+var cooldown_mordida: float = 0.0
 
 var _estado: int = Estado.PATRULHA
 var _player: Node2D = null
@@ -68,13 +64,13 @@ var _indice_rota: int = 0
 var _celula_origem_cache: Vector2i = CELULA_INVALIDA
 var _celula_alvo_cache: Vector2i = CELULA_INVALIDA
 
+
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	add_to_group("enemies")
 	health = max_health
-	GameState.call_deferred("refresh_counts", get_tree())
+	GameState.call_deferred("atualizar_contagem", get_tree())
 
-	# Normaliza posição caso o Sprite2D/CollisionShape2D tivesse offset na cena
 	if sprite != null:
 		if sprite.position != Vector2.ZERO:
 			global_position = sprite.position
@@ -82,6 +78,7 @@ func _ready() -> void:
 		if sprite.texture == null or sprite.texture.resource_path.ends_with("inimigoVermei.png"):
 			sprite.texture = TEX_VIRUS_MELEE
 		sprite.scale = Vector2(1.5, 1.5)
+
 	if col_shape != null and col_shape.position != Vector2.ZERO:
 		col_shape.position = Vector2.ZERO
 
@@ -90,17 +87,17 @@ func _ready() -> void:
 	_procurar_player(false)
 	_escolher_nova_patrulha()
 
-func _physics_process(delta: float) -> void:
-	if _hurt_flash_timer > 0.0:
-		_hurt_flash_timer -= delta
-		if sprite != null:
-			sprite.modulate = Color(2.5, 0.4, 0.4, 1.0) if _hurt_flash_timer > 0.0 else Color.WHITE
 
-	if _attack_cooldown > 0.0:
-		_attack_cooldown -= delta
+func _physics_process(delta: float) -> void:
+	if piscar_dano > 0.0:
+		piscar_dano -= delta
+		if sprite != null:
+			sprite.modulate = Color(2.5, 0.4, 0.4) if piscar_dano > 0.0 else Color.WHITE
+
+	if cooldown_mordida > 0.0:
+		cooldown_mordida -= delta
 
 	_atualizar_referencia_player(delta)
-
 	if is_instance_valid(_player):
 		_atualizar_estado()
 
@@ -111,18 +108,17 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-	# Dano de contato no protagonista (por colisão física ou proximidade dos corpos)
-	if is_instance_valid(_player) and _attack_cooldown <= 0.0:
-		var encostou: bool = global_position.distance_to(_player.global_position) <= 44.0
+	if is_instance_valid(_player) and cooldown_mordida <= 0.0:
+		var encostou := global_position.distance_to(_player.global_position) <= 44.0
 		if not encostou:
 			for i in range(get_slide_collision_count()):
-				var col := get_slide_collision(i)
+				var col = get_slide_collision(i)
 				if col != null and col.get_collider() == _player:
 					encostou = true
 					break
 		if encostou and _player.has_method("take_damage"):
 			_player.take_damage(1, global_position)
-			_attack_cooldown = 0.75
+			cooldown_mordida = 0.75
 
 	if _estado == Estado.PATRULHA and get_slide_collision_count() > 0:
 		_reagir_a_colisao_patrulha()
@@ -130,42 +126,42 @@ func _physics_process(delta: float) -> void:
 	if sprite != null and absf(velocity.x) > 1.0:
 		sprite.flip_h = velocity.x < 0.0
 
-func take_damage(amount: int) -> void:
+
+func take_damage(qtd: int) -> void:
 	if health <= 0:
 		return
-	health -= amount
-	_hurt_flash_timer = 0.12
+	health -= qtd
+	piscar_dano = 0.12
 	if sprite != null:
-		sprite.modulate = Color(2.5, 0.4, 0.4, 1.0)
+		sprite.modulate = Color(2.5, 0.4, 0.4)
 	queue_redraw()
+
 	if health <= 0:
-		_morrer()
+		_eliminar()
 
-func _morrer() -> void:
-	var tree: SceneTree = get_tree()
+func _eliminar():
+	var tree = get_tree()
 	remove_from_group("enemies")
-	GameState.add_score(score_value)
+	GameState.somar_pontos(score_value)
 
-	# Dropa orbe de energia/cura no chão raramente (12% de chance)
 	if tree != null and tree.current_scene != null and _random.randf() <= 0.12:
-		var drop := Area2D.new()
-		drop.set_script(DropScript)
-		tree.current_scene.call_deferred("add_child", drop)
-		var tipo: int = DropScript.DropType.SPREAD_BUFF if _random.randf() < 0.18 else DropScript.DropType.ENERGY_ORB
-		drop.call_deferred("setup", global_position, tipo)
+		var item = Area2D.new()
+		item.set_script(ScriptDrop)
+		tree.current_scene.call_deferred("add_child", item)
+		var t_drop = ScriptDrop.TipoItem.CURA_FORTE if _random.randf() < 0.18 else ScriptDrop.TipoItem.ORBE_ATP
+		item.call_deferred("iniciar_drop", global_position, t_drop)
 
-	# Verifica se destruiu todos os spawners e limpou todos os inimigos
 	if tree != null:
-		GameState.check_room_victory(tree)
-
+		GameState.checar_sala_limpa(tree)
 	queue_free()
 
 func _draw() -> void:
 	if health < max_health and health > 0:
-		var w: float = 26.0
-		var ratio: float = clampf(float(health) / float(max_health), 0.0, 1.0)
-		draw_rect(Rect2(Vector2(-w * 0.5, 18.0), Vector2(w, 4.0)), Color(0.1, 0.1, 0.1, 0.9))
-		draw_rect(Rect2(Vector2(-w * 0.5, 18.0), Vector2(w * ratio, 4.0)), Color(0.95, 0.2, 0.2, 1.0))
+		var l := 26.0
+		var pct := clampf(float(health) / float(max_health), 0.0, 1.0)
+		draw_rect(Rect2(Vector2(-l * 0.5, 18.0), Vector2(l, 4.0)), Color(0.1, 0.1, 0.1, 0.9))
+		draw_rect(Rect2(Vector2(-l * 0.5, 18.0), Vector2(l * pct, 4.0)), Color(0.95, 0.2, 0.2))
+
 
 func _procurar_player(mostrar_aviso: bool = false) -> void:
 	var encontrado: Node = get_tree().get_first_node_in_group("player")
@@ -196,29 +192,34 @@ func _atualizar_estado() -> void:
 		_indice_rota = 0
 		_escolher_nova_patrulha()
 
+
 func _configurar_grade() -> void:
 	if mapa_fundo == null or mapa_parede == null or mapa_fundo.tile_set == null:
 		return
+
 	var regiao: Rect2i = mapa_fundo.get_used_rect()
 	if regiao.size.x <= 0 or regiao.size.y <= 0:
 		return
-	var tamanho_celula := Vector2(mapa_fundo.tile_set.tile_size)
+
 	_astar = AStarGrid2D.new()
 	_astar.region = regiao
-	_astar.cell_size = tamanho_celula
+	_astar.cell_size = Vector2(mapa_fundo.tile_set.tile_size)
 	_astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
 	_astar.default_compute_heuristic = AStarGrid2D.HEURISTIC_MANHATTAN
 	_astar.default_estimate_heuristic = AStarGrid2D.HEURISTIC_MANHATTAN
 	_astar.update()
 	_astar.fill_solid_region(regiao, true)
+
 	for celula: Vector2i in mapa_fundo.get_used_cells():
 		if _astar.is_in_boundsv(celula):
 			_astar.set_point_solid(celula, false)
+
 	for celula_parede: Vector2i in mapa_parede.get_used_cells():
-		var posicao_global: Vector2 = mapa_parede.to_global(mapa_parede.map_to_local(celula_parede))
-		var celula_fundo: Vector2i = mapa_fundo.local_to_map(mapa_fundo.to_local(posicao_global))
-		if _astar.is_in_boundsv(celula_fundo):
-			_astar.set_point_solid(celula_fundo, true)
+		var pos_global: Vector2 = mapa_parede.to_global(mapa_parede.map_to_local(celula_parede))
+		var cel_fundo: Vector2i = mapa_fundo.local_to_map(mapa_fundo.to_local(pos_global))
+		if _astar.is_in_boundsv(cel_fundo):
+			_astar.set_point_solid(cel_fundo, true)
+
 	_grade_pronta = true
 
 func _posicao_para_celula(posicao_global: Vector2) -> Vector2i:
@@ -235,10 +236,11 @@ func _celula_caminhavel_mais_proxima(origem: Vector2i) -> Vector2i:
 			for x: int in range(-raio, raio + 1):
 				if abs(x) + abs(y) != raio:
 					continue
-				var candidata: Vector2i = origem + Vector2i(x, y)
-				if _astar.is_in_boundsv(candidata) and not _astar.is_point_solid(candidata):
-					return candidata
+				var cand: Vector2i = origem + Vector2i(x, y)
+				if _astar.is_in_boundsv(cand) and not _astar.is_point_solid(cand):
+					return cand
 	return CELULA_INVALIDA
+
 
 func _atualizar_patrulha(delta: float) -> void:
 	_timer_patrulha -= delta
@@ -247,20 +249,21 @@ func _atualizar_patrulha(delta: float) -> void:
 	velocity = velocity.move_toward(_direcao_patrulha * patrol_speed, acceleration * delta)
 
 func _escolher_nova_patrulha() -> void:
-	var candidatas: Array[Vector2] = []
-	for direcao: Vector2 in DIRECOES_CARDINAIS:
-		if not test_move(global_transform, direcao * 8.0):
-			candidatas.append(direcao)
-	if candidatas.is_empty():
+	var opcoes: Array[Vector2] = []
+	for dir: Vector2 in DIRECOES_CARDINAIS:
+		if not test_move(global_transform, dir * 8.0):
+			opcoes.append(dir)
+	if opcoes.is_empty():
 		_direcao_patrulha = Vector2.ZERO
 		_timer_patrulha = 0.5
 		return
-	_direcao_patrulha = candidatas[_random.randi_range(0, candidatas.size() - 1)]
+	_direcao_patrulha = opcoes[_random.randi_range(0, opcoes.size() - 1)]
 	_ultima_direcao_patrulha = _direcao_patrulha
 	_timer_patrulha = _random.randf_range(min_patrol_time, maxf(min_patrol_time, max_patrol_time))
 
 func _reagir_a_colisao_patrulha() -> void:
 	_escolher_nova_patrulha()
+
 
 func _atualizar_perseguicao(delta: float) -> void:
 	if not is_instance_valid(_player):
@@ -269,31 +272,37 @@ func _atualizar_perseguicao(delta: float) -> void:
 	if not _grade_pronta:
 		velocity = global_position.direction_to(_player.global_position) * chase_speed
 		return
-	var distancia: float = global_position.distance_to(_player.global_position)
-	if distancia <= stop_distance:
+
+	var dist: float = global_position.distance_to(_player.global_position)
+	if dist <= stop_distance:
 		velocity = velocity.move_toward(Vector2.ZERO, deceleration * delta)
 		return
-	var celula_atual: Vector2i = _posicao_para_celula(global_position)
-	var celula_player: Vector2i = _posicao_para_celula(_player.global_position)
-	if celula_atual == celula_player or distancia < 140.0:
+
+	var cel_atual: Vector2i = _posicao_para_celula(global_position)
+	var cel_player: Vector2i = _posicao_para_celula(_player.global_position)
+	if cel_atual == cel_player or dist < 140.0:
 		velocity = global_position.direction_to(_player.global_position) * chase_speed
 		return
+
 	_timer_recalculo_caminho -= delta
-	if _timer_recalculo_caminho <= 0.0 or celula_atual != _celula_origem_cache or celula_player != _celula_alvo_cache:
-		_calcular_rota(celula_atual, celula_player)
+	if _timer_recalculo_caminho <= 0.0 or cel_atual != _celula_origem_cache or cel_player != _celula_alvo_cache:
+		_calcular_rota(cel_atual, cel_player)
+
 	if _rota.is_empty():
 		velocity = global_position.direction_to(_player.global_position) * chase_speed
 		return
+
 	while _indice_rota < _rota.size():
-		var waypoint: Vector2 = _celula_para_posicao(_rota[_indice_rota])
-		if global_position.distance_to(waypoint) > tolerancia_waypoint:
+		if global_position.distance_to(_celula_para_posicao(_rota[_indice_rota])) > tolerancia_waypoint:
 			break
 		_indice_rota += 1
+
 	if _indice_rota >= _rota.size():
 		velocity = global_position.direction_to(_player.global_position) * chase_speed
 		return
-	var proximo_ponto: Vector2 = _celula_para_posicao(_rota[_indice_rota])
-	velocity = (proximo_ponto - global_position).normalized() * chase_speed
+
+	var pto: Vector2 = _celula_para_posicao(_rota[_indice_rota])
+	velocity = (pto - global_position).normalized() * chase_speed
 
 func _calcular_rota(origem: Vector2i, destino: Vector2i) -> void:
 	_timer_recalculo_caminho = maxf(intervalo_recalculo_caminho, 0.05)
@@ -301,13 +310,15 @@ func _calcular_rota(origem: Vector2i, destino: Vector2i) -> void:
 	_celula_alvo_cache = destino
 	_rota.clear()
 	_indice_rota = 0
-	var origem_caminhavel: Vector2i = _celula_caminhavel_mais_proxima(origem)
-	var destino_caminhavel: Vector2i = _celula_caminhavel_mais_proxima(destino)
-	if origem_caminhavel == CELULA_INVALIDA or destino_caminhavel == CELULA_INVALIDA:
+
+	var orig_ok: Vector2i = _celula_caminhavel_mais_proxima(origem)
+	var dest_ok: Vector2i = _celula_caminhavel_mais_proxima(destino)
+	if orig_ok == CELULA_INVALIDA or dest_ok == CELULA_INVALIDA:
 		return
-	var rota_calculada: Array[Vector2i] = _astar.get_id_path(origem_caminhavel, destino_caminhavel)
-	if rota_calculada.is_empty():
+
+	var caminho: Array[Vector2i] = _astar.get_id_path(orig_ok, dest_ok)
+	if caminho.is_empty():
 		return
-	if origem == origem_caminhavel and rota_calculada[0] == origem_caminhavel:
-		rota_calculada.remove_at(0)
-	_rota = rota_calculada
+	if origem == orig_ok and caminho[0] == orig_ok:
+		caminho.remove_at(0)
+	_rota = caminho
