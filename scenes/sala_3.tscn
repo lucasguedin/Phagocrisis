@@ -1,4 +1,4 @@
-[gd_scene format=4 uid="uid://d1n7r5w3p8x4k"]
+[gd_scene format=4 uid="uid://c3sala3phago"]
 
 [ext_resource type="Script" uid="uid://dosvvbh2d1rfg" path="res://src/Player.gd" id="1_3qlfd"]
 [ext_resource type="PackedScene" uid="uid://bxpu83qo5c2fj" path="res://scenes/main_menu.tscn" id="2_lvmly"]
@@ -57,7 +57,7 @@ bg_color = Color(0.88, 0.18, 0.22, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_k8w3n"]
 bg_color = Color(0.15, 0.58, 0.92, 1)
 
-[node name="Cena2D" type="Node2D" unique_id=236744926]
+[node name="Cena2D2" type="Node2D" unique_id=236744926]
 
 [node name="fundo" type="TileMapLayer" parent="." unique_id=312799379]
 z_index = -2
@@ -96,23 +96,23 @@ scale = Vector2(0.85, 0.85)
 texture = ExtResource("5_k9m2w")
 
 [node name="SpawnerMelee1" type="Sprite2D" parent="." unique_id=1839204751]
-position = Vector2(160, 260)
+position = Vector2(222, 244)
 texture = ExtResource("9_w5n1t")
 script = ExtResource("11_j7m4k")
 
 [node name="SpawnerRanged1" type="Sprite2D" parent="." unique_id=1548293017]
-position = Vector2(1130, 140)
+position = Vector2(1103, 247)
 texture = ExtResource("10_q9t2x")
 script = ExtResource("11_j7m4k")
 spawner_type = 1
 
 [node name="SpawnerMelee2" type="Sprite2D" parent="." unique_id=647382910]
-position = Vector2(160, 560)
+position = Vector2(1108, 558)
 texture = ExtResource("9_w5n1t")
 script = ExtResource("11_j7m4k")
 
 [node name="SpawnerRanged2" type="Sprite2D" parent="." unique_id=738291046]
-position = Vector2(1130, 560)
+position = Vector2(230, 564)
 texture = ExtResource("10_q9t2x")
 script = ExtResource("11_j7m4k")
 spawner_type = 1
