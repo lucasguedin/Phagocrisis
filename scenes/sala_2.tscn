@@ -54,6 +54,12 @@ bg_color = Color(0.88, 0.18, 0.22, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_k8w3n"]
 bg_color = Color(0.15, 0.58, 0.92, 1)
 
+[sub_resource type="LabelSettings" id="LabelSettings_5kujc"]
+font_size = 18
+outline_size = 10
+outline_color = Color(0, 0, 0, 1)
+shadow_size = 2
+
 [node name="Cena2D2" type="Node2D" unique_id=236744926]
 
 [node name="fundo" type="TileMapLayer" parent="." unique_id=312799379]
@@ -279,13 +285,18 @@ offset_right = 260.0
 offset_bottom = 176.0
 text = "PORTAIS: 2   INIMIGOS: 3"
 
-[node name="TxtDica" type="Label" parent="HUD" unique_id=847291038]
-modulate = Color(0.9, 0.9, 0.9, 0.85)
-offset_left = 16.0
-offset_top = 688.0
-offset_right = 900.0
-offset_bottom = 712.0
+[node name="TxtDica" type="Label" parent="HUD" unique_id=1188707519]
+oversampling_with_scale = 2
+offset_left = 198.0
+offset_top = 691.0
+offset_right = 1082.0
+offset_bottom = 717.0
+mouse_default_cursor_shape = 6
 text = "[WASD] Mover | [Clique/Espaco] 3 Tiros | [E/RMB] Dash | [P] Pausa | [R] Reiniciar"
+label_settings = SubResource("LabelSettings_5kujc")
+horizontal_alignment = 1
+vertical_alignment = 1
+uppercase = true
 
 [node name="TxtAviso" type="Label" parent="HUD" unique_id=1748293012]
 visible = false

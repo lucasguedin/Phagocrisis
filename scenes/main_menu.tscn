@@ -3,7 +3,12 @@
 [ext_resource type="Script" uid="uid://bttdxpakultoy" path="res://src/menu/pause_menu.gd" id="1_bqqt6"]
 [ext_resource type="Script" uid="uid://dyu0wxoxkt214" path="res://src/menu/play_button.gd" id="1_ekxnf"]
 [ext_resource type="Texture2D" uid="uid://bp4adqliyrfvc" path="res://sprites/logo_utfpr.png" id="1_l6cm7"]
+[ext_resource type="Texture2D" uid="uid://cinwgtelpr5he" path="res://sprites/fundo01.png" id="2_rtw2f"]
+[ext_resource type="FontFile" uid="uid://crih6jroifcky" path="res://fonts/MetalMania-Regular.ttf" id="3_oa1go"]
 [ext_resource type="Script" uid="uid://hy31p7fqf4pa" path="res://src/menu/exit_button.gd" id="3_wu84c"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_g65wl"]
+bg_color = Color(0.22745098, 0.039215688, 0.039215688, 1)
 
 [node name="MainMenu" type="Control" unique_id=330832889]
 layout_mode = 3
@@ -13,6 +18,17 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_bqqt6")
+
+[node name="Fundo" type="TextureRect" parent="." unique_id=1665615182]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_rtw2f")
+expand_mode = 1
+stretch_mode = 1
 
 [node name="CenterContainer" type="CenterContainer" parent="." unique_id=866471752]
 layout_mode = 1
@@ -28,47 +44,60 @@ theme_override_constants/separation = 20
 
 [node name="TitleLabel" type="Label" parent="CenterContainer/VBoxContainer" unique_id=78416365]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.91, 0, 0.015166435, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 8
-theme_override_font_sizes/font_size = 96
+theme_override_colors/font_color = Color(0.8901961, 0.85490197, 0.7882353, 1)
+theme_override_colors/font_outline_color = Color(0.22745098, 0.039215688, 0.039215688, 1)
+theme_override_constants/outline_size = 13
+theme_override_fonts/font = ExtResource("3_oa1go")
+theme_override_font_sizes/font_size = 140
 text = "Phagocrisis"
 horizontal_alignment = 1
 
 [node name="PlayButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=1998878814]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 50)
+custom_minimum_size = Vector2(300, 50)
 layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = SubResource("StyleBoxFlat_g65wl")
 text = "Jogar"
 script = ExtResource("1_ekxnf")
 game_scene_path = "uid://blugytqu80ldq"
 
 [node name="ContinueButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=905866582]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 50)
+custom_minimum_size = Vector2(300, 50)
 layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = SubResource("StyleBoxFlat_g65wl")
 text = "Continuar"
 
 [node name="OptionsButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=1291138946]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 50)
+custom_minimum_size = Vector2(300, 50)
 layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = SubResource("StyleBoxFlat_g65wl")
 text = "Opções"
 
 [node name="ExitButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=1769525891]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 50)
+custom_minimum_size = Vector2(300, 50)
 layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = SubResource("StyleBoxFlat_g65wl")
 text = "Sair"
 script = ExtResource("3_wu84c")
 
 [node name="LogoUTFPR" type="TextureRect" parent="." unique_id=455891843]
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 1
-offset_left = 20.0
-offset_top = 20.0
-offset_right = 120.0
-offset_bottom = 120.0
+offset_left = 1096.0
+offset_top = 36.0
+offset_right = 1245.0
+offset_bottom = 137.0
 texture = ExtResource("1_l6cm7")
 expand_mode = 1
 stretch_mode = 5
