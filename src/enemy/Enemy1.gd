@@ -33,8 +33,8 @@ const CELULA_INVALIDA: Vector2i = Vector2i(-999999, -999999)
 @export var max_patrol_time: float = 4.0
 
 @export_group("Perseguição por Caminhos")
-@export var intervalo_recalculo_caminho: float = 0.25
-@export var tolerancia_waypoint: float = 4.0
+@export var intervalo_recalculo_caminho: float = 0.2
+@export var tolerancia_waypoint: float = 16.0
 @export var raio_busca_celula: int = 8
 
 @onready var mapa_fundo: TileMapLayer = get_node_or_null("../fundo") as TileMapLayer
@@ -56,6 +56,7 @@ var _ultima_direcao_patrulha: Vector2 = Vector2.ZERO
 var _timer_patrulha: float = 0.0
 var _timer_busca_player: float = 0.0
 var _timer_recalculo_caminho: float = 0.0
+var _tempo_travado: float = 0.0
 
 var _astar: AStarGrid2D
 var _grade_pronta: bool = false
@@ -67,6 +68,8 @@ var _celula_alvo_cache: Vector2i = CELULA_INVALIDA
 
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
+	wall_min_slide_angle = 0.0
+	safe_margin = 0.2
 	add_to_group("enemies")
 	health = max_health
 	GameState.call_deferred("atualizar_contagem", get_tree())
@@ -79,8 +82,12 @@ func _ready() -> void:
 			sprite.texture = TEX_VIRUS_MELEE
 		sprite.scale = Vector2(1.5, 1.5)
 
-	if col_shape != null and col_shape.position != Vector2.ZERO:
+	if col_shape != null:
 		col_shape.position = Vector2.ZERO
+		# colisor circular evita enroscar na quina de 90 graus dos tiles de parede
+		var circ := CircleShape2D.new()
+		circ.radius = 18.0 if max_health > 20 else 11.0
+		col_shape.shape = circ
 
 	_random.randomize()
 	_configurar_grade()
@@ -204,9 +211,9 @@ func _configurar_grade() -> void:
 	_astar = AStarGrid2D.new()
 	_astar.region = regiao
 	_astar.cell_size = Vector2(mapa_fundo.tile_set.tile_size)
-	_astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
-	_astar.default_compute_heuristic = AStarGrid2D.HEURISTIC_MANHATTAN
-	_astar.default_estimate_heuristic = AStarGrid2D.HEURISTIC_MANHATTAN
+	_astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
+	_astar.default_compute_heuristic = AStarGrid2D.HEURISTIC_OCTILE
+	_astar.default_estimate_heuristic = AStarGrid2D.HEURISTIC_OCTILE
 	_astar.update()
 	_astar.fill_solid_region(regiao, true)
 
@@ -214,11 +221,23 @@ func _configurar_grade() -> void:
 		if _astar.is_in_boundsv(celula):
 			_astar.set_point_solid(celula, false)
 
+	var paredes_solidas: Array[Vector2i] = []
 	for celula_parede: Vector2i in mapa_parede.get_used_cells():
 		var pos_global: Vector2 = mapa_parede.to_global(mapa_parede.map_to_local(celula_parede))
 		var cel_fundo: Vector2i = mapa_fundo.local_to_map(mapa_fundo.to_local(pos_global))
 		if _astar.is_in_boundsv(cel_fundo):
 			_astar.set_point_solid(cel_fundo, true)
+			paredes_solidas.append(cel_fundo)
+
+	# aumenta o peso das celulas coladas em paredes pra rota contornar as quinas com folga
+	for cel_p: Vector2i in paredes_solidas:
+		for dy in range(-1, 2):
+			for dx in range(-1, 2):
+				if dx == 0 and dy == 0:
+					continue
+				var viz := cel_p + Vector2i(dx, dy)
+				if _astar.is_in_boundsv(viz) and not _astar.is_point_solid(viz):
+					_astar.set_point_weight_scale(viz, 4.5)
 
 	_grade_pronta = true
 
@@ -251,7 +270,7 @@ func _atualizar_patrulha(delta: float) -> void:
 func _escolher_nova_patrulha() -> void:
 	var opcoes: Array[Vector2] = []
 	for dir: Vector2 in DIRECOES_CARDINAIS:
-		if not test_move(global_transform, dir * 8.0):
+		if not test_move(global_transform, dir * 10.0):
 			opcoes.append(dir)
 	if opcoes.is_empty():
 		_direcao_patrulha = Vector2.ZERO
@@ -278,31 +297,66 @@ func _atualizar_perseguicao(delta: float) -> void:
 		velocity = velocity.move_toward(Vector2.ZERO, deceleration * delta)
 		return
 
+	var dir_player := global_position.direction_to(_player.global_position)
+	var caminho_livre := not test_move(global_transform, dir_player * minf(dist, 42.0))
+
 	var cel_atual: Vector2i = _posicao_para_celula(global_position)
 	var cel_player: Vector2i = _posicao_para_celula(_player.global_position)
-	if cel_atual == cel_player or dist < 140.0:
-		velocity = global_position.direction_to(_player.global_position) * chase_speed
+	if (cel_atual == cel_player or dist < 110.0) and caminho_livre:
+		velocity = dir_player * chase_speed
 		return
 
 	_timer_recalculo_caminho -= delta
 	if _timer_recalculo_caminho <= 0.0 or cel_atual != _celula_origem_cache or cel_player != _celula_alvo_cache:
 		_calcular_rota(cel_atual, cel_player)
 
-	if _rota.is_empty():
-		velocity = global_position.direction_to(_player.global_position) * chase_speed
-		return
-
 	while _indice_rota < _rota.size():
-		if global_position.distance_to(_celula_para_posicao(_rota[_indice_rota])) > tolerancia_waypoint:
+		var wp: Vector2 = _celula_para_posicao(_rota[_indice_rota])
+		if global_position.distance_to(wp) <= tolerancia_waypoint:
+			_indice_rota += 1
+		elif _indice_rota + 1 < _rota.size():
+			var prox_wp: Vector2 = _celula_para_posicao(_rota[_indice_rota + 1])
+			var dir_prox := global_position.direction_to(prox_wp)
+			if global_position.distance_to(prox_wp) < global_position.distance_to(wp) and not test_move(global_transform, dir_prox * 18.0):
+				_indice_rota += 1
+			else:
+				break
+		else:
 			break
-		_indice_rota += 1
 
-	if _indice_rota >= _rota.size():
-		velocity = global_position.direction_to(_player.global_position) * chase_speed
-		return
+	var dir_desejada := dir_player
+	if _indice_rota < _rota.size():
+		var pto: Vector2 = _celula_para_posicao(_rota[_indice_rota])
+		dir_desejada = global_position.direction_to(pto)
 
-	var pto: Vector2 = _celula_para_posicao(_rota[_indice_rota])
-	velocity = (pto - global_position).normalized() * chase_speed
+	# se estiver raspando numa quina de parede, desliza pela tangente livre
+	if test_move(global_transform, dir_desejada * 12.0):
+		var melhor_dir := Vector2.ZERO
+		var menor_ang := 999.0
+		for ang_teste in [-35.0, 35.0, -65.0, 65.0, -90.0, 90.0, -125.0, 125.0]:
+			var cand := dir_desejada.rotated(deg_to_rad(ang_teste))
+			if not test_move(global_transform, cand * 14.0):
+				var diff_ang := absf(deg_to_rad(ang_teste))
+				if diff_ang < menor_ang:
+					menor_ang = diff_ang
+					melhor_dir = cand
+		if melhor_dir != Vector2.ZERO:
+			dir_desejada = melhor_dir
+		elif _indice_rota + 1 < _rota.size():
+			_indice_rota += 1
+
+	if get_real_velocity().length() < chase_speed * 0.2:
+		_tempo_travado += delta
+		if _tempo_travado >= 0.25:
+			_tempo_travado = 0.0
+			if _indice_rota + 1 < _rota.size():
+				_indice_rota += 1
+			else:
+				_calcular_rota(cel_atual, cel_player)
+	else:
+		_tempo_travado = 0.0
+
+	velocity = dir_desejada * chase_speed
 
 func _calcular_rota(origem: Vector2i, destino: Vector2i) -> void:
 	_timer_recalculo_caminho = maxf(intervalo_recalculo_caminho, 0.05)

@@ -91,6 +91,9 @@ position = Vector2(640, 350)
 scale = Vector2(1.9, 1.9)
 texture = ExtResource("7_c8k2p")
 
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1649203841]
+position = Vector2(640, 360)
+
 [node name="HUD" type="CanvasLayer" parent="." unique_id=1482905173]
 
 [node name="FundoFoto" type="ColorRect" parent="HUD" unique_id=839204716]
@@ -226,18 +229,72 @@ text = "TESOURO: 1"
 
 [node name="TxtDica" type="Label" parent="HUD" unique_id=847291038]
 modulate = Color(0.9, 0.9, 0.9, 0.85)
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
 offset_left = 16.0
-offset_top = 688.0
+offset_top = -32.0
 offset_right = 900.0
-offset_bottom = 712.0
+offset_bottom = -8.0
+grow_vertical = 0
 text = "[WASD] Mover | [Clique/Espaco] 3 Tiros | [E/RMB] Dash | [P] Pausa | [R] Reiniciar"
 
 [node name="TxtAviso" type="Label" parent="HUD" unique_id=1748293012]
 modulate = Color(0.35, 0.95, 1, 1)
-offset_left = 240.0
-offset_top = 290.0
-offset_right = 1040.0
-offset_bottom = 400.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -55.0
+offset_right = 400.0
+offset_bottom = 55.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_font_sizes/font_size = 28
 text = "SALA DO TESOURO!\nPegue o bau no centro para liberar a porta!"
 horizontal_alignment = 1
+
+[node name="BtnPausa" type="Button" parent="HUD" unique_id=1592837461]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -108.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 54.0
+grow_horizontal = 0
+focus_mode = 0
+text = "II PAUSA"
+
+[node name="BtnDash" type="Button" parent="HUD" unique_id=1592837462]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -124.0
+offset_top = -84.0
+offset_right = -20.0
+offset_bottom = -24.0
+grow_horizontal = 0
+grow_vertical = 0
+focus_mode = 0
+text = "DASH"
+
+[node name="BtnReiniciar" type="Button" parent="HUD" unique_id=1592837463]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -90.0
+offset_top = 64.0
+offset_right = 90.0
+offset_bottom = 112.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 0
+text = "JOGAR NOVAMENTE"

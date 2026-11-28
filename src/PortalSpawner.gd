@@ -70,6 +70,25 @@ func take_damage(dano: int) -> void:
 		queue_free()
 
 
+func _posicao_spawn_segura(raiz: Node) -> Vector2:
+	var parede := raiz.get_node_or_null("parede") as TileMapLayer
+	for tentativa in range(8):
+		var cand := global_position + Vector2(rng.randf_range(-28.0, 28.0), rng.randf_range(-28.0, 28.0))
+		cand.x = clampf(cand.x, 56.0, 1224.0)
+		cand.y = clampf(cand.y, 56.0, 664.0)
+		if parede == null:
+			return cand
+		var cel := parede.local_to_map(parede.to_local(cand))
+		var livre := true
+		for dy in range(-1, 2):
+			for dx in range(-1, 2):
+				if parede.get_cell_source_id(cel + Vector2i(dx, dy)) != -1:
+					livre = false
+					break
+		if livre:
+			return cand
+	return global_position
+
 func _criar_inimigo():
 	var raiz = get_tree().current_scene
 	if raiz == null:
@@ -89,12 +108,12 @@ func _criar_inimigo():
 	novo.add_child(img)
 	var col = CollisionShape2D.new()
 	col.name = "CollisionShape2D"
-	var ret = RectangleShape2D.new()
-	ret.size = Vector2(28, 28)
-	col.shape = ret
+	var circ = CircleShape2D.new()
+	circ.radius = 11.0
+	col.shape = circ
 	novo.add_child(col)
 
-	novo.global_position = global_position + Vector2(rng.randf_range(-28.0, 28.0), rng.randf_range(-28.0, 28.0))
+	novo.global_position = _posicao_spawn_segura(raiz)
 	raiz.add_child(novo)
 	GameState.call_deferred("atualizar_contagem", get_tree())
 

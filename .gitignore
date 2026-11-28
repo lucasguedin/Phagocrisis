@@ -1,6 +1,11 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
-zAndroidMarcaoLab/  
-zLinuxMarcaoLab/  
+builds/
+*.tmp
+*.bak
+*.swp
+*~
+zAndroidMarcaoLab/
+zLinuxMarcaoLab/
 zWinMarcaoLab/

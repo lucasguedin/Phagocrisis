@@ -101,11 +101,11 @@ Criar uma issue bem estruturada é a garantia de entrega sem ambiguidades e com 
 > **Nota:** Todas as issues abaixo estão desmarcadas (`[ ]`) para controle de implementação completa futura conforme o DoD final. O projeto conta atualmente com o **Protótipo Frugal Funcional** em `scenes/cena_2d.tscn`.
 
 ### 🏗️ Grupo 1: Infraestrutura, Ambiente Godot 4 e Arquitetura de Entradas
-- [ ] **Issue #01:** `[Infraestrutura]` Configuração do `project.godot`, viewport 1920x1080 (16:9) pixel-perfect e renderizador Compatibility
-- [ ] **Issue #02:** `[Infraestrutura]` Padronização da árvore de diretórios (`src/`, `scenes/`, `sprites/`, `audio/`, `resources/`) e `.gitignore`
-- [ ] **Issue #03:** `[Ambiente]` Configuração da Matriz de Camadas e Máscaras de Colisão Física de 32 bits (Layers 1 a 8)
-- [ ] **Issue #04:** `[Ambiente]` Mapeamento do `InputMap` Dual Paritário (Teclado + Mouse e Gamepad XInput/DirectInput com Deadzone)
-- [ ] **Issue #05:** `[Backend]` Refatoração e expansão do Singleton `GameState.gd` (Máquina de Estados Global, Sinais e Persistência)
+- [x] **Issue #01:** `[Infraestrutura]` Configuração do `project.godot`, viewport 1920x1080 (16:9) pixel-perfect e renderizador Compatibility
+- [x] **Issue #02:** `[Infraestrutura]` Padronização da árvore de diretórios (`src/`, `scenes/`, `sprites/`, `audio/`, `resources/`) e `.gitignore`
+- [x] **Issue #03:** `[Ambiente]` Configuração da Matriz de Camadas e Máscaras de Colisão Física de 32 bits (Layers 1 a 8)
+- [x] **Issue #04:** `[Ambiente]` Mapeamento do `InputMap` Dual Paritário (Teclado + Mouse e Gamepad XInput/DirectInput com Deadzone)
+- [x] **Issue #05:** `[Backend]` Refatoração e expansão do Singleton `GameState.gd` (Máquina de Estados Global, Sinais e Persistência)
 
 ### 🎨 Grupo 2: Criação Manual de Sprites e Assets Visuais (Pixel Art Autoral)
 - [ ] **Issue #06:** `[Frontend]` Criação manual em Pixel Art do Spritesheet do Fagócito Primordial (Idle, Locomoção, Dash e Dano)

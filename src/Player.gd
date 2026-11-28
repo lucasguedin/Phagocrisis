@@ -19,6 +19,7 @@ const TEX_PORTA_ABERTA = preload("res://sprites/door_open.png")
 @onready var sprite_arma: Sprite2D = $WeaponPivot/Arma
 @onready var porta_norte: Sprite2D = $"../DoorPortal"
 @onready var bau_sala: Sprite2D = get_node_or_null("../TreasureChest") as Sprite2D
+@onready var camera_sala: Camera2D = get_node_or_null("../Camera2D") as Camera2D
 
 @onready var barra_hp: ProgressBar = $"../HUD/BarraHP"
 @onready var txt_hp: Label = $"../HUD/TxtHP"
@@ -28,6 +29,10 @@ const TEX_PORTA_ABERTA = preload("res://sprites/door_open.png")
 @onready var txt_pontos: Label = $"../HUD/TxtPontos"
 @onready var txt_objetivo: Label = $"../HUD/TxtObjetivo"
 @onready var txt_aviso_centro: Label = $"../HUD/TxtAviso"
+@onready var txt_dica: Label = get_node_or_null("../HUD/TxtDica") as Label
+@onready var btn_pausa: Button = get_node_or_null("../HUD/BtnPausa") as Button
+@onready var btn_dash: Button = get_node_or_null("../HUD/BtnDash") as Button
+@onready var btn_reiniciar: Button = get_node_or_null("../HUD/BtnReiniciar") as Button
 
 var ultima_direcao: Vector2 = Vector2.RIGHT
 var dir_mira: Vector2 = Vector2.RIGHT
@@ -48,6 +53,13 @@ var recarga_dash: float = 0.0
 var morto: bool = false
 var porta_aberta: bool = false
 
+# controles touch pra mobile
+var dedo_mov_id: int = -1
+var origem_toque_mov: Vector2 = Vector2.ZERO
+var vetor_toque_mov: Vector2 = Vector2.ZERO
+var dedo_mira_id: int = -1
+var atirando_toque: bool = false
+
 
 func _ready() -> void:
 	add_to_group("player")
@@ -57,6 +69,7 @@ func _ready() -> void:
 	if numero_sala == 1:
 		GameState.resetar_run()
 
+	GameState.set_match_state(GameState.MatchState.IN_GAME)
 	GameState.sala_atual = numero_sala
 	vida_max = GameState.vida_max_player
 	vida_atual = GameState.vida_atual_player
@@ -64,30 +77,90 @@ func _ready() -> void:
 	dano_arma = GameState.dano_arma_player
 	barra_hp.max_value = vida_max
 
+	if btn_pausa != null:
+		btn_pausa.pressed.connect(abrir_menu_pausa)
+	if btn_dash != null:
+		btn_dash.pressed.connect(func(): dash_pendente = true)
+	if btn_reiniciar != null:
+		btn_reiniciar.pressed.connect(_reiniciar_jogo)
+
+	get_viewport().size_changed.connect(_ajustar_camera_responsiva)
+	_ajustar_camera_responsiva()
+
 	GameState.stats_updated.connect(_atualizar_hud)
 	GameState.call_deferred("atualizar_contagem", get_tree())
 	_atualizar_hud()
 
 
-func _input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_P or event.keycode == KEY_ESCAPE:
-			abrir_menu_pausa()
-			return
-		if event.keycode == KEY_R:
-			get_tree().paused = false
-			get_tree().change_scene_to_file("res://scenes/sala_1.tscn")
-			return
-		if event.keycode == KEY_E or event.keycode == KEY_SHIFT:
-			dash_pendente = true
-		if event.keycode == KEY_SPACE and recarga_tiro <= 0.0 and fila_tiros <= 0:
-			_iniciar_rajada()
+func _ajustar_camera_responsiva() -> void:
+	var tam := get_viewport_rect().size
+	if camera_sala != null:
+		camera_sala.position = game_size * 0.5
+		var zx := tam.x / game_size.x
+		var zy := tam.y / game_size.y
+		var z := minf(zx, zy)
+		camera_sala.zoom = Vector2(z, z)
 
-	elif event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_RIGHT:
-			dash_pendente = true
-		elif event.button_index == MOUSE_BUTTON_LEFT and recarga_tiro <= 0.0 and fila_tiros <= 0:
-			_iniciar_rajada()
+	if txt_dica != null:
+		txt_dica.visible = tam.x >= 760.0 and not DisplayServer.is_touchscreen_available()
+
+
+func _reiniciar_jogo() -> void:
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://scenes/sala_1.tscn")
+
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"pause"):
+		abrir_menu_pausa()
+		return
+
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_R:
+		_reiniciar_jogo()
+		return
+
+	if event is InputEventScreenTouch:
+		var larg_tela := get_viewport_rect().size.x
+		if event.pressed:
+			if event.position.x < larg_tela * 0.48 and dedo_mov_id == -1:
+				dedo_mov_id = event.index
+				origem_toque_mov = event.position
+				vetor_toque_mov = Vector2.ZERO
+			elif dedo_mira_id == -1:
+				dedo_mira_id = event.index
+				atirando_toque = true
+				_atualizar_mira_por_tela(event.position)
+		else:
+			if event.index == dedo_mov_id:
+				dedo_mov_id = -1
+				vetor_toque_mov = Vector2.ZERO
+			elif event.index == dedo_mira_id:
+				dedo_mira_id = -1
+				atirando_toque = false
+		return
+
+	if event is InputEventScreenDrag:
+		if event.index == dedo_mov_id:
+			var delta_toque: Vector2 = event.position - origem_toque_mov
+			if delta_toque.length() > 10.0:
+				vetor_toque_mov = (delta_toque / 55.0).limit_length(1.0)
+			else:
+				vetor_toque_mov = Vector2.ZERO
+		elif event.index == dedo_mira_id:
+			_atualizar_mira_por_tela(event.position)
+		return
+
+	if event.is_action_pressed(&"dash"):
+		dash_pendente = true
+
+	if event.is_action_pressed(&"shoot") and recarga_tiro <= 0.0 and fila_tiros <= 0:
+		_iniciar_rajada()
+
+func _atualizar_mira_por_tela(pos_tela: Vector2) -> void:
+	var mundo := get_canvas_transform().affine_inverse() * pos_tela
+	var diff := mundo - global_position
+	if diff.length() > 1.0:
+		dir_mira = diff.normalized()
 
 func abrir_menu_pausa() -> void:
 	if pause_menu_scene == null or get_tree().paused:
@@ -101,6 +174,7 @@ func abrir_menu_pausa() -> void:
 	menu.process_mode = Node.PROCESS_MODE_ALWAYS
 	camada.add_child(menu)
 	menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	GameState.set_match_state(GameState.MatchState.PAUSED)
 	get_tree().paused = true
 
 
@@ -121,19 +195,12 @@ func _physics_process(delta: float) -> void:
 		atp_atual = minf(atp_max, atp_atual + 4.5 * delta)
 		_atualizar_hud()
 
-	var mov := Vector2.ZERO
-	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT) or Input.get_joy_axis(0, JOY_AXIS_LEFT_X) < -0.25:
-		mov.x -= 1.0
-	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT) or Input.get_joy_axis(0, JOY_AXIS_LEFT_X) > 0.25:
-		mov.x += 1.0
-	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP) or Input.get_joy_axis(0, JOY_AXIS_LEFT_Y) < -0.25:
-		mov.y -= 1.0
-	if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN) or Input.get_joy_axis(0, JOY_AXIS_LEFT_Y) > 0.25:
-		mov.y += 1.0
+	var mov := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
+	if vetor_toque_mov.length() > mov.length():
+		mov = vetor_toque_mov
 
 	if mov != Vector2.ZERO:
-		mov = mov.normalized()
-		ultima_direcao = mov
+		ultima_direcao = mov.normalized()
 
 	if dash_pendente:
 		dash_pendente = false
@@ -165,10 +232,10 @@ func _physics_process(delta: float) -> void:
 					take_damage(1, obj.global_position)
 					break
 
-	var manche = Vector2(Input.get_joy_axis(0, JOY_AXIS_RIGHT_X), Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y))
+	var manche := Input.get_vector(&"aim_left", &"aim_right", &"aim_up", &"aim_down")
 	if manche.length() >= 0.25:
 		dir_mira = manche.normalized()
-	else:
+	elif dedo_mira_id == -1 and dedo_mov_id == -1:
 		var diff_mouse = get_global_mouse_position() - global_position
 		if diff_mouse.length() > 1.0:
 			dir_mira = diff_mouse.normalized()
@@ -187,14 +254,8 @@ func _physics_process(delta: float) -> void:
 			atraso_rajada = 0.065
 			fila_tiros -= 1
 			_instanciar_bala()
-	else:
-		var apertando_tiro = (
-			Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
-			or Input.is_key_pressed(KEY_SPACE)
-			or Input.get_joy_axis(0, JOY_AXIS_TRIGGER_RIGHT) > 0.3
-		)
-		if apertando_tiro and recarga_tiro <= 0.0:
-			_iniciar_rajada()
+	elif (Input.is_action_pressed(&"shoot") or atirando_toque) and recarga_tiro <= 0.0:
+		_iniciar_rajada()
 
 	queue_redraw()
 
@@ -214,6 +275,7 @@ func _abrir_bau():
 	GameState.vida_atual_player = vida_atual
 	GameState.atp_player = atp_atual
 	GameState.dano_arma_player = dano_arma
+	GameState.unlock_adaptation(&"lipid_membrane")
 	GameState.somar_pontos(400)
 	GameState.checar_sala_limpa(get_tree())
 	_atualizar_hud()
@@ -291,10 +353,13 @@ func take_damage(qtd: int = 1, de_onde: Vector2 = Vector2.ZERO):
 
 	if vida_atual <= 0:
 		morto = true
+		GameState.set_match_state(GameState.MatchState.GAME_OVER)
 		sprite.modulate = Color(0.5, 0.1, 0.1, 0.8)
-		txt_aviso_centro.text = "GAME OVER\nAperte [R] para tentar de novo"
+		txt_aviso_centro.text = "GAME OVER\nAperte [R] ou toque abaixo para tentar de novo"
 		txt_aviso_centro.modulate = Color(1.0, 0.25, 0.25)
 		txt_aviso_centro.visible = true
+		if btn_reiniciar != null:
+			btn_reiniciar.visible = true
 
 func pegar_drop(tipo: int):
 	if tipo == ScriptDrop.TipoItem.CURA_FORTE:
@@ -315,6 +380,7 @@ func destravar_porta():
 	porta_aberta = true
 
 	if numero_sala < GameState.total_salas:
+		GameState.set_match_state(GameState.MatchState.LEVEL_CLEAR)
 		porta_norte.texture = TEX_PORTA_ABERTA
 		porta_norte.modulate = Color(0.6, 1.4, 0.7, 1.0)
 		var nome_prox = "SALA %d/5" % (numero_sala + 1)
@@ -326,9 +392,12 @@ func destravar_porta():
 		txt_aviso_centro.modulate = Color(0.35, 1.0, 0.45)
 		txt_aviso_centro.visible = true
 	else:
-		txt_aviso_centro.text = "BACTERIOFAGO DERROTADO! FASE CONCLUIDA!\nAperte [R] para jogar novamente"
+		GameState.set_match_state(GameState.MatchState.VICTORY)
+		txt_aviso_centro.text = "BACTERIOFAGO DERROTADO! FASE CONCLUIDA!\nAperte [R] ou toque abaixo para jogar novamente"
 		txt_aviso_centro.modulate = Color(0.35, 1.0, 0.35)
 		txt_aviso_centro.visible = true
+		if btn_reiniciar != null:
+			btn_reiniciar.visible = true
 
 func _atualizar_hud():
 	barra_hp.value = vida_atual
@@ -341,6 +410,8 @@ func _atualizar_hud():
 		txt_objetivo.text = "TESOURO: %d" % GameState.bau_vivo
 	else:
 		txt_objetivo.text = "PORTAIS: %d   INIMIGOS: %d" % [GameState.portais_vivos, GameState.bichos_vivos]
+	GameState.player_health_changed.emit(float(vida_atual), float(vida_max))
+	GameState.player_atp_changed.emit(atp_atual, atp_max)
 
 func _draw() -> void:
 	var l := 34.0

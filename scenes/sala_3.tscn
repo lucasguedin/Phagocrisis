@@ -1,4 +1,4 @@
-[gd_scene format=4 uid="uid://c3sala3phago"]
+[gd_scene format=4 uid="uid://d1n7r5w3p8x4k"]
 
 [ext_resource type="Script" uid="uid://dosvvbh2d1rfg" path="res://src/Player.gd" id="1_3qlfd"]
 [ext_resource type="PackedScene" uid="uid://bxpu83qo5c2fj" path="res://scenes/main_menu.tscn" id="2_lvmly"]
@@ -57,7 +57,7 @@ bg_color = Color(0.88, 0.18, 0.22, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_k8w3n"]
 bg_color = Color(0.15, 0.58, 0.92, 1)
 
-[node name="Cena2D2" type="Node2D" unique_id=236744926]
+[node name="Cena2D" type="Node2D" unique_id=236744926]
 
 [node name="fundo" type="TileMapLayer" parent="." unique_id=312799379]
 z_index = -2
@@ -96,23 +96,23 @@ scale = Vector2(0.85, 0.85)
 texture = ExtResource("5_k9m2w")
 
 [node name="SpawnerMelee1" type="Sprite2D" parent="." unique_id=1839204751]
-position = Vector2(222, 244)
+position = Vector2(160, 260)
 texture = ExtResource("9_w5n1t")
 script = ExtResource("11_j7m4k")
 
 [node name="SpawnerRanged1" type="Sprite2D" parent="." unique_id=1548293017]
-position = Vector2(1103, 247)
+position = Vector2(1130, 140)
 texture = ExtResource("10_q9t2x")
 script = ExtResource("11_j7m4k")
 spawner_type = 1
 
 [node name="SpawnerMelee2" type="Sprite2D" parent="." unique_id=647382910]
-position = Vector2(1108, 558)
+position = Vector2(160, 560)
 texture = ExtResource("9_w5n1t")
 script = ExtResource("11_j7m4k")
 
 [node name="SpawnerRanged2" type="Sprite2D" parent="." unique_id=738291046]
-position = Vector2(230, 564)
+position = Vector2(1130, 560)
 texture = ExtResource("10_q9t2x")
 script = ExtResource("11_j7m4k")
 spawner_type = 1
@@ -156,6 +156,9 @@ texture = ExtResource("8_m4v8p")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Enemy4" unique_id=1473829104]
 shape = SubResource("RectangleShape2D_h4t55")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1649203841]
+position = Vector2(640, 360)
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=1482905173]
 
@@ -292,18 +295,72 @@ text = "PORTAIS: 4   INIMIGOS: 4"
 
 [node name="TxtDica" type="Label" parent="HUD" unique_id=847291038]
 modulate = Color(0.9, 0.9, 0.9, 0.85)
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
 offset_left = 16.0
-offset_top = 688.0
+offset_top = -32.0
 offset_right = 900.0
-offset_bottom = 712.0
+offset_bottom = -8.0
+grow_vertical = 0
 text = "[WASD] Mover | [Clique/Espaco] 3 Tiros | [E/RMB] Dash | [P] Pausa | [R] Reiniciar"
 
 [node name="TxtAviso" type="Label" parent="HUD" unique_id=1748293012]
 visible = false
 modulate = Color(0.35, 0.95, 1, 1)
-offset_left = 240.0
-offset_top = 290.0
-offset_right = 1040.0
-offset_bottom = 400.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -55.0
+offset_right = 400.0
+offset_bottom = 55.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_font_sizes/font_size = 28
 horizontal_alignment = 1
+
+[node name="BtnPausa" type="Button" parent="HUD" unique_id=1592837461]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -108.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 54.0
+grow_horizontal = 0
+focus_mode = 0
+text = "II PAUSA"
+
+[node name="BtnDash" type="Button" parent="HUD" unique_id=1592837462]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -124.0
+offset_top = -84.0
+offset_right = -20.0
+offset_bottom = -24.0
+grow_horizontal = 0
+grow_vertical = 0
+focus_mode = 0
+text = "DASH"
+
+[node name="BtnReiniciar" type="Button" parent="HUD" unique_id=1592837463]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -90.0
+offset_top = 64.0
+offset_right = 90.0
+offset_bottom = 112.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 0
+text = "JOGAR NOVAMENTE"
