@@ -274,24 +274,18 @@ offset_bottom = 174.0
 text = "PORTAIS: 2   INIMIGOS: 3"
 
 [node name="TxtDica" type="Label" parent="HUD" unique_id=847291038]
-<<<<<<< Updated upstream
-oversampling_with_scale = 2
-offset_left = 198.0
-offset_top = 691.0
-offset_right = 1082.0
-offset_bottom = 717.0
-mouse_default_cursor_shape = 6
-=======
-modulate = Color(0.9, 0.9, 0.9, 0.85)
-anchors_preset = 2
+anchors_preset = 7
+anchor_left = 0.5
 anchor_top = 1.0
+anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = 16.0
+offset_left = -442.0
 offset_top = -32.0
-offset_right = 900.0
-offset_bottom = -8.0
+offset_right = 442.0
+offset_bottom = -6.0
+grow_horizontal = 2
 grow_vertical = 0
->>>>>>> Stashed changes
+mouse_default_cursor_shape = 6
 text = "[WASD] Mover | [Clique/Espaco] 3 Tiros | [E/RMB] Dash | [P] Pausa | [R] Reiniciar"
 label_settings = SubResource("LabelSettings_c4cdg")
 horizontal_alignment = 1

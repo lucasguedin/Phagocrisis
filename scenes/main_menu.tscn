@@ -61,7 +61,7 @@ theme_override_font_sizes/font_size = 21
 theme_override_styles/normal = SubResource("StyleBoxFlat_g65wl")
 text = "Jogar"
 script = ExtResource("1_ekxnf")
-game_scene_path = "uid://blugytqu80ldq"
+game_scene_path = "res://scenes/sala_1.tscn"
 
 [node name="ContinueButton" type="Button" parent="CenterContainer/VBoxContainer" unique_id=905866582]
 unique_name_in_owner = true

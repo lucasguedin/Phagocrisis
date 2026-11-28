@@ -26,7 +26,7 @@ func _ready() -> void:
 func _ajustar_layout_menu() -> void:
 	var tam := get_viewport_rect().size
 	if title_label != null:
-		var fonte_tam := clampi(int(minf(tam.x * 0.08, tam.y * 0.13)), 38, 96)
+		var fonte_tam := clampi(int(minf(tam.x * 0.11, tam.y * 0.195)), 48, 140)
 		title_label.add_theme_font_size_override("font_size", fonte_tam)
 	if vbox != null:
 		var sep := clampi(int(tam.y * 0.025), 8, 20)
